@@ -12,8 +12,8 @@
   --bg-card:#12121a;
   --bg-card-alt:#181824;
   --fg:#e8e8ef;
-  --fg-dim:#7a7a8e;
-  --fg-muted:#4a4a5e;
+  --fg-dim:#9d9db4;
+  --fg-muted:#6e6e88;
   --accent:#00d4aa;
   --accent-dim:rgba(0,212,170,0.12);
   --accent-glow:rgba(0,212,170,0.06);
@@ -50,9 +50,9 @@ html,body{
   position:fixed;left:2.2vw;top:50%;
   transform:translateY(-50%);
   z-index:100;
-  display:flex;flex-direction:column;gap:6px;
+  display:flex;flex-direction:column;gap:8px;
   font-family:var(--font-mono);
-  font-size:10px;letter-spacing:.04em;
+  font-size:12px;letter-spacing:.04em;
   text-transform:uppercase;
 }
 #chapter-nav .ch{
@@ -69,7 +69,7 @@ html,body{
 /* ── Slide counter ── */
 #slide-counter{
   position:fixed;bottom:2.5vh;right:3vw;
-  font-family:var(--font-mono);font-size:12px;
+  font-family:var(--font-mono);font-size:13px;
   color:var(--fg-muted);letter-spacing:.06em;
   z-index:100;
 }
@@ -101,7 +101,7 @@ html,body{
   margin-bottom:1.5em;
 }
 .slide .label{
-  font-family:var(--font-mono);font-size:clamp(10px,1vw,13px);
+  font-family:var(--font-mono);font-size:clamp(11px,1.1vw,15px);
   text-transform:uppercase;letter-spacing:.1em;
   color:var(--accent);
   margin-bottom:1.2em;
@@ -165,7 +165,7 @@ html,body{
   margin:1em 0;
 }
 .claim-card .card-label{
-  font-family:var(--font-mono);font-size:11px;
+  font-family:var(--font-mono);font-size:12px;
   text-transform:uppercase;letter-spacing:.1em;
   color:var(--accent);margin-bottom:12px;
 }
@@ -181,7 +181,7 @@ html,body{
 .claim-card .field{font-size:clamp(11px,1vw,13px)}
 .claim-card .field .fk{
   font-family:var(--font-mono);color:var(--fg-muted);
-  text-transform:uppercase;font-size:9px;letter-spacing:.08em;
+  text-transform:uppercase;font-size:10px;letter-spacing:.08em;
 }
 .claim-card .field .fv{color:var(--fg-dim);margin-top:2px}
 
@@ -205,7 +205,7 @@ html,body{
   border:1px solid rgba(0,212,170,.2);
 }
 .compare .col h3{
-  font-family:var(--font-mono);font-size:clamp(11px,1.1vw,14px);
+  font-family:var(--font-mono);font-size:clamp(12px,1.2vw,15px);
   text-transform:uppercase;letter-spacing:.08em;
   margin-bottom:16px;
 }
@@ -244,7 +244,7 @@ html,body{
 }
 .tile .tile-title{
   font-family:var(--font-mono);
-  font-size:clamp(10px,1vw,13px);
+  font-size:clamp(11px,1.1vw,14px);
   text-transform:uppercase;letter-spacing:.06em;
   color:var(--fg);
 }
@@ -263,7 +263,7 @@ html,body{
   border:1px solid rgba(255,255,255,.05);
 }
 .three-col .tc h3{
-  font-family:var(--font-mono);font-size:clamp(10px,1vw,13px);
+  font-family:var(--font-mono);font-size:clamp(11px,1.1vw,14px);
   text-transform:uppercase;letter-spacing:.08em;
   color:var(--accent);margin-bottom:14px;
 }
@@ -301,7 +301,7 @@ html,body{
   color:var(--fg);
 }
 .mech-node .mn-chip{
-  font-size:clamp(10px,.9vw,12px);
+  font-size:clamp(11px,1vw,13px);
   color:var(--fg-dim);
   background:var(--bg-card-alt);
   border-radius:6px;
@@ -327,7 +327,7 @@ html,body{
 .hub-svg{width:100%;height:auto}
 .hub-svg text.hub-label{
   font-family:'JetBrains Mono',monospace;
-  font-size:10px;
+  font-size:11px;
   text-transform:uppercase;
   letter-spacing:.06em;
   fill:var(--fg-dim);
@@ -359,7 +359,7 @@ html,body{
   border-radius:8px;
   padding:clamp(10px,1.5vw,16px) clamp(16px,2.5vw,32px);
   font-family:var(--font-mono);
-  font-size:clamp(11px,1.1vw,14px);
+  font-size:clamp(12px,1.2vw,15px);
   color:var(--accent);
   text-align:center;
   margin-top:1.5em;
@@ -404,8 +404,8 @@ html,body{
 /* ── Source line ── */
 .source{
   font-family:var(--font-mono);
-  font-size:clamp(8px,.7vw,10px);
-  color:var(--fg-muted);
+  font-size:clamp(10px,.9vw,13px);
+  color:var(--fg-dim);
   margin-top:1.5em;
   text-align:center;
   max-width:600px;
@@ -523,14 +523,14 @@ html,body{
   <div class="stat-row">
     <div class="stat">
       <div class="num">+17%</div>
-      <div class="desc">Submission growth to Elsevier journals, 2023–2024</div>
+      <div class="desc">Submission growth to Elsevier journals, 2023–2024 <sup style="color:var(--accent)">(1)</sup></div>
     </div>
     <div class="stat">
       <div class="num rust">&gt;95%</div>
-      <div class="desc">Hallucinated references in frontier models for biomedicine</div>
+      <div class="desc">Hallucinated references in frontier models for biomedicine <sup style="color:var(--accent)">(2)</sup></div>
     </div>
   </div>
-  <div class="source">Dimensions (2025) &middot; Asai et al. 2026, Nature 650, 857–863</div>
+  <div class="source" style="margin-top:3em"><span style="color:var(--accent)">(1)</span> Dimensions (2025) &nbsp;&middot;&nbsp; <span style="color:var(--accent)">(2)</span> Asai et al. 2026, Nature 650, 857–863</div>
 </div>
 
 <!-- ═══ SLIDE 2: THE BOTTLENECK ═══ -->
