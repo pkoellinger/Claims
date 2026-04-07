@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Claims Subnet — Pitch Deck</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;
+  --bg-card:#12121a;
+  --bg-card-alt:#181824;
+  --fg:#e8e8ef;
+  --fg-dim:#7a7a8e;
+  --fg-muted:#4a4a5e;
+  --accent:#00d4aa;
+  --accent-dim:rgba(0,212,170,0.12);
+  --accent-glow:rgba(0,212,170,0.06);
+  --rust:#e8614d;
+  --rust-dim:rgba(232,97,77,0.12);
+  --font-mono:'JetBrains Mono',monospace;
+  --font-body:'DM Sans',sans-serif;
+}
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  background:var(--bg);color:var(--fg);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── Presentation container ── */
+#presentation{width:100%;height:100%;position:relative}
+
+.slide{
+  position:absolute;top:0;left:0;
+  width:100vw;height:100vh;
+  display:none;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  padding:5vh 8vw 5vh 14vw;
+  opacity:0;
+  transition:opacity .5s ease;
+}
+.slide.active{display:flex;opacity:1}
+
+/* ── Chapter navigation (center-left) ── */
+#chapter-nav{
+  position:fixed;left:2.2vw;top:50%;
+  transform:translateY(-50%);
+  z-index:100;
+  display:flex;flex-direction:column;gap:6px;
+  font-family:var(--font-mono);
+  font-size:10px;letter-spacing:.04em;
+  text-transform:uppercase;
+}
+#chapter-nav .ch{
+  color:var(--fg-muted);
+  cursor:pointer;
+  padding:3px 0;
+  transition:color .3s,transform .3s;
+  white-space:nowrap;
+}
+#chapter-nav .ch:hover{color:var(--fg-dim)}
+#chapter-nav .ch.active{color:var(--accent);transform:translateX(4px)}
+#chapter-nav .ch.visited{color:var(--fg-dim)}
+
+/* ── Slide counter ── */
+#slide-counter{
+  position:fixed;bottom:2.5vh;right:3vw;
+  font-family:var(--font-mono);font-size:12px;
+  color:var(--fg-muted);letter-spacing:.06em;
+  z-index:100;
+}
+
+/* ── Progress bar ── */
+#progress{
+  position:fixed;top:0;left:0;height:2px;
+  background:var(--accent);
+  transition:width .4s ease;
+  z-index:200;
+}
+
+/* ── Global typography ── */
+.slide h1{
+  font-family:var(--font-body);
+  font-weight:700;font-size:clamp(32px,5vw,64px);
+  line-height:1.1;letter-spacing:-.02em;
+  margin-bottom:.4em;
+  max-width:80%;
+  text-align:center;
+}
+.slide h2{
+  font-family:var(--font-body);
+  font-weight:500;font-size:clamp(18px,2.2vw,28px);
+  line-height:1.35;
+  color:var(--fg-dim);
+  max-width:70%;
+  text-align:center;
+  margin-bottom:1.5em;
+}
+.slide .label{
+  font-family:var(--font-mono);font-size:clamp(10px,1vw,13px);
+  text-transform:uppercase;letter-spacing:.1em;
+  color:var(--accent);
+  margin-bottom:1.2em;
+}
+
+/* ── Stat blocks ── */
+.stat-row{display:flex;gap:clamp(24px,5vw,80px);margin-top:1em;flex-wrap:wrap;justify-content:center}
+.stat{text-align:center}
+.stat .num{
+  font-family:var(--font-mono);font-weight:700;
+  font-size:clamp(42px,7vw,96px);
+  color:var(--accent);line-height:1;
+}
+.stat .num.rust{color:var(--rust)}
+.stat .desc{
+  font-size:clamp(12px,1.3vw,16px);
+  color:var(--fg-dim);margin-top:.4em;
+  max-width:220px;
+}
+
+/* ── Pipeline diagram ── */
+.pipeline{
+  display:flex;align-items:center;gap:0;
+  flex-wrap:nowrap;
+  margin:1.5em 0;
+  width:100%;
+  max-width:900px;
+  justify-content:center;
+}
+.pipe-node{
+  background:var(--bg-card);
+  border:1px solid var(--fg-muted);
+  border-radius:8px;
+  padding:clamp(12px,2vw,24px) clamp(14px,2vw,28px);
+  font-family:var(--font-mono);
+  font-size:clamp(11px,1.2vw,15px);
+  text-align:center;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.pipe-node.highlight{
+  border-color:var(--accent);
+  background:var(--accent-dim);
+  color:var(--accent);
+  font-weight:700;
+}
+.pipe-arrow{
+  color:var(--fg-muted);
+  font-size:clamp(16px,2vw,24px);
+  margin:0 clamp(4px,1vw,12px);
+  flex-shrink:0;
+}
+
+/* ── Claim card ── */
+.claim-card{
+  background:var(--bg-card);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;
+  padding:clamp(20px,3vw,36px);
+  max-width:680px;width:100%;
+  margin:1em 0;
+}
+.claim-card .card-label{
+  font-family:var(--font-mono);font-size:11px;
+  text-transform:uppercase;letter-spacing:.1em;
+  color:var(--accent);margin-bottom:12px;
+}
+.claim-card .card-claim{
+  font-size:clamp(14px,1.6vw,18px);line-height:1.5;
+  color:var(--fg);margin-bottom:18px;
+  border-left:2px solid var(--accent);
+  padding-left:16px;
+}
+.claim-card .card-fields{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;
+}
+.claim-card .field{font-size:clamp(11px,1vw,13px)}
+.claim-card .field .fk{
+  font-family:var(--font-mono);color:var(--fg-muted);
+  text-transform:uppercase;font-size:9px;letter-spacing:.08em;
+}
+.claim-card .field .fv{color:var(--fg-dim);margin-top:2px}
+
+/* ── Comparison columns ── */
+.compare{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:clamp(16px,3vw,48px);
+  max-width:900px;width:100%;
+  margin:1em 0;
+}
+.compare .col{
+  border-radius:12px;
+  padding:clamp(18px,2.5vw,32px);
+}
+.compare .col.dim{
+  background:var(--bg-card);
+  border:1px solid rgba(255,255,255,.05);
+}
+.compare .col.bright{
+  background:var(--accent-dim);
+  border:1px solid rgba(0,212,170,.2);
+}
+.compare .col h3{
+  font-family:var(--font-mono);font-size:clamp(11px,1.1vw,14px);
+  text-transform:uppercase;letter-spacing:.08em;
+  margin-bottom:16px;
+}
+.compare .col.dim h3{color:var(--fg-muted)}
+.compare .col.bright h3{color:var(--accent)}
+.compare .col ul{list-style:none;padding:0}
+.compare .col ul li{
+  font-size:clamp(12px,1.2vw,15px);
+  color:var(--fg-dim);line-height:1.5;
+  padding:6px 0;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.compare .col.bright ul li{color:var(--fg)}
+
+/* ── App tiles ── */
+.tile-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:clamp(10px,1.5vw,20px);
+  max-width:780px;width:100%;
+  margin:1em 0;
+}
+.tile{
+  background:var(--bg-card);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:10px;
+  padding:clamp(14px,2vw,28px) clamp(12px,1.5vw,20px);
+  text-align:center;
+  transition:border-color .3s, background .3s;
+}
+.tile:hover{border-color:rgba(0,212,170,.25);background:var(--accent-dim)}
+.tile .tile-icon{
+  font-size:clamp(22px,2.8vw,36px);
+  margin-bottom:8px;
+  display:block;
+}
+.tile .tile-title{
+  font-family:var(--font-mono);
+  font-size:clamp(10px,1vw,13px);
+  text-transform:uppercase;letter-spacing:.06em;
+  color:var(--fg);
+}
+
+/* ── Three-column layout ── */
+.three-col{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:clamp(12px,2vw,32px);
+  max-width:900px;width:100%;
+  margin:1em 0;
+}
+.three-col .tc{
+  background:var(--bg-card);
+  border-radius:10px;
+  padding:clamp(16px,2vw,28px);
+  border:1px solid rgba(255,255,255,.05);
+}
+.three-col .tc h3{
+  font-family:var(--font-mono);font-size:clamp(10px,1vw,13px);
+  text-transform:uppercase;letter-spacing:.08em;
+  color:var(--accent);margin-bottom:14px;
+}
+.three-col .tc ul{list-style:none;padding:0}
+.three-col .tc ul li{
+  font-size:clamp(12px,1.2vw,14px);
+  color:var(--fg-dim);line-height:1.5;
+  padding:5px 0;
+  border-bottom:1px solid rgba(255,255,255,.03);
+}
+.three-col .tc ul li:last-child{border:none}
+
+/* ── Mechanism flow ── */
+.mech-flow{
+  display:flex;align-items:flex-start;
+  gap:0;justify-content:center;
+  max-width:900px;width:100%;
+  margin:1em 0;
+  flex-wrap:nowrap;
+}
+.mech-node{
+  text-align:center;flex:1;max-width:260px;
+}
+.mech-node .mn-box{
+  background:var(--bg-card);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;
+  padding:clamp(14px,2vw,24px) clamp(10px,1.5vw,18px);
+  margin-bottom:10px;
+}
+.mech-node .mn-box.accent-border{border-color:rgba(0,212,170,.3)}
+.mech-node .mn-title{
+  font-family:var(--font-mono);font-weight:700;
+  font-size:clamp(12px,1.3vw,16px);
+  color:var(--fg);
+}
+.mech-node .mn-chip{
+  font-size:clamp(10px,.9vw,12px);
+  color:var(--fg-dim);
+  background:var(--bg-card-alt);
+  border-radius:6px;
+  padding:6px 10px;
+  margin-top:6px;
+  line-height:1.35;
+}
+.mech-arrow{
+  display:flex;align-items:center;
+  color:var(--accent);
+  font-size:clamp(18px,2.5vw,28px);
+  padding-top:clamp(12px,2vw,24px);
+  flex-shrink:0;
+  margin:0 clamp(2px,.8vw,8px);
+}
+
+/* ── Hub diagram ── */
+.hub-container{
+  position:relative;
+  width:100%;max-width:700px;
+  margin:1.5em 0;
+}
+.hub-svg{width:100%;height:auto}
+.hub-svg text.hub-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  fill:var(--fg-dim);
+}
+.hub-svg text.hub-center-text{
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px;
+  font-weight:700;
+  fill:var(--accent);
+}
+.hub-svg .hub-line-svg{stroke:rgba(0,212,170,.2);stroke-width:1}
+.hub-svg .hub-circle{fill:var(--accent-dim);stroke:var(--accent);stroke-width:1.5}
+.hub-svg .spoke-bg{fill:var(--bg-card);stroke:rgba(255,255,255,.08);stroke-width:1;rx:6}
+
+/* ── Closing line ── */
+.closing-line{
+  font-size:clamp(14px,1.6vw,20px);
+  color:var(--fg-dim);
+  max-width:700px;
+  text-align:center;
+  line-height:1.6;
+  margin-top:1.5em;
+  font-style:italic;
+}
+
+/* ── Bottom-line bar ── */
+.bottom-line{
+  background:var(--accent-dim);
+  border-radius:8px;
+  padding:clamp(10px,1.5vw,16px) clamp(16px,2.5vw,32px);
+  font-family:var(--font-mono);
+  font-size:clamp(11px,1.1vw,14px);
+  color:var(--accent);
+  text-align:center;
+  margin-top:1.5em;
+  max-width:700px;
+  width:100%;
+}
+
+/* ── Title slide specifics ── */
+.slide.title-slide{position:relative}
+.slide.title-slide::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;bottom:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,212,170,.04) 0%, transparent 70%);
+  pointer-events:none;
+}
+.title-big{
+  font-family:var(--font-body);
+  font-weight:700;
+  font-size:clamp(48px,8vw,112px);
+  letter-spacing:-.03em;
+  line-height:1;
+  text-align:center;
+}
+.title-big .accent{color:var(--accent)}
+.title-sub{
+  font-family:var(--font-mono);
+  font-size:clamp(12px,1.4vw,17px);
+  color:var(--fg-dim);
+  margin-top:1.2em;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  text-align:center;
+}
+.title-tag{
+  font-size:clamp(12px,1.2vw,15px);
+  color:var(--fg-muted);
+  margin-top:2em;
+  text-align:center;
+}
+
+/* ── Source line ── */
+.source{
+  font-family:var(--font-mono);
+  font-size:clamp(8px,.7vw,10px);
+  color:var(--fg-muted);
+  margin-top:1.5em;
+  text-align:center;
+  max-width:600px;
+}
+
+/* ── Bullet list ── */
+.bullet-list{
+  list-style:none;padding:0;
+  max-width:600px;width:100%;
+}
+.bullet-list li{
+  font-size:clamp(14px,1.5vw,18px);
+  color:var(--fg-dim);line-height:1.5;
+  padding:8px 0 8px 24px;
+  position:relative;
+}
+.bullet-list li::before{
+  content:'';position:absolute;
+  left:0;top:50%;
+  width:6px;height:6px;
+  border-radius:50%;
+  background:var(--accent);
+  transform:translateY(-50%);
+}
+
+/* ── Wedge layout ── */
+.wedge-layout{
+  display:grid;grid-template-columns:1fr 2fr;
+  gap:clamp(20px,3vw,48px);
+  max-width:850px;width:100%;
+  margin:1em 0;
+  align-items:stretch;
+}
+.wedge-stack{
+  display:flex;flex-direction:column;gap:8px;
+  justify-content:stretch;
+}
+.wedge-block{
+  background:var(--accent-dim);
+  border:1px solid rgba(0,212,170,.15);
+  border-radius:8px;
+  padding:clamp(12px,1.5vw,20px);
+  font-family:var(--font-mono);
+  font-size:clamp(12px,1.2vw,15px);
+  color:var(--accent);
+  text-align:center;
+  font-weight:500;
+  flex:1;
+  display:flex;align-items:center;justify-content:center;
+}
+.wedge-details{
+  display:flex;flex-direction:column;gap:8px;
+}
+.wedge-item{
+  background:var(--bg-card);
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:8px;
+  padding:clamp(12px,1.5vw,18px);
+}
+.wedge-item h4{
+  font-family:var(--font-mono);font-size:clamp(10px,.9vw,12px);
+  text-transform:uppercase;letter-spacing:.08em;
+  color:var(--fg-muted);margin-bottom:6px;
+}
+.wedge-item p{
+  font-size:clamp(12px,1.2vw,15px);
+  color:var(--fg-dim);line-height:1.45;
+}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  .slide{padding:4vh 6vw 4vh 16vw}
+  #chapter-nav{left:2vw;font-size:8px;gap:4px}
+  .pipeline{flex-wrap:wrap;justify-content:center}
+  .compare{grid-template-columns:1fr}
+  .tile-grid{grid-template-columns:repeat(2,1fr)}
+  .three-col{grid-template-columns:1fr}
+  .mech-flow{flex-direction:column;align-items:center}
+  .mech-arrow{transform:rotate(90deg);padding:0;margin:4px 0}
+  .wedge-layout{grid-template-columns:1fr}
+  .hub{width:260px;height:260px}
+  .claim-card .card-fields{grid-template-columns:1fr}
+}
+
+@media(max-width:480px){
+  .slide{padding:3vh 4vw 3vh 18vw}
+  .title-big{font-size:clamp(36px,10vw,56px)}
+  .tile-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<nav id="chapter-nav"></nav>
+
+<div id="slide-counter"></div>
+
+<div id="presentation">
+
+<!-- ═══ SLIDE 0: TITLE ═══ -->
+<div class="slide title-slide" data-chapter="">
+  <div class="label">Bittensor Subnet</div>
+  <div class="title-big">Claims<span class="accent">.</span></div>
+  <div class="title-sub">The programmable evidence layer for science</div>
+  <div class="title-tag">Open scientific infrastructure &middot; Public-good &amp; commercial value</div>
+</div>
+
+<!-- ═══ SLIDE 1: THE PROBLEM ═══ -->
+<div class="slide" data-chapter="The Problem">
+  <div class="label">The Problem</div>
+  <h1>Scientific evidence is trapped in PDFs</h1>
+  <h2>AI is accelerating output, but our knowledge validation system was built for humans reading documents.</h2>
+  <div class="stat-row">
+    <div class="stat">
+      <div class="num">+17%</div>
+      <div class="desc">Submission growth to Elsevier journals, 2023–2024</div>
+    </div>
+    <div class="stat">
+      <div class="num rust">&gt;95%</div>
+      <div class="desc">Hallucinated references in frontier models for biomedicine</div>
+    </div>
+  </div>
+  <div class="source">Dimensions (2025) &middot; Asai et al. 2026, Nature 650, 857–863</div>
+</div>
+
+<!-- ═══ SLIDE 2: THE BOTTLENECK ═══ -->
+<div class="slide" data-chapter="The Problem">
+  <div class="label">The Problem</div>
+  <h1>A missing layer</h1>
+  <ul class="bullet-list">
+    <li>Workflows require repeated manual claim extraction</li>
+    <li>Peer review is slow, expensive, and opaque</li>
+    <li>LLMs hallucinate without grounded retrieval</li>
+    <li>No machine-readable evidence substrate exists</li>
+  </ul>
+</div>
+
+<!-- ═══ SLIDE 3: PURPOSE ═══ -->
+<div class="slide" data-chapter="Our Purpose">
+  <div class="label">Our Purpose</div>
+  <h1 style="max-width:90%;font-size:clamp(24px,3.5vw,44px)">Turn scientific literature into an open, machine-readable claims and evidence layer that humans, AI systems, and institutions can query directly.</h1>
+  <div class="bottom-line">Open scientific infrastructure with both public-good and commercial value</div>
+</div>
+
+<!-- ═══ SLIDE 4: SOLUTION OVERVIEW ═══ -->
+<div class="slide" data-chapter="The Solution">
+  <div class="label">The Solution</div>
+  <h1>From papers to a reusable evidence layer</h1>
+  <div class="pipeline">
+    <div class="pipe-node">Papers</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node highlight">Claims + Evidence</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node">API / MCP</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node">Apps · Researchers · AI Agents · Pharma</div>
+  </div>
+  <div class="bottom-line">The product is the structured evidence layer in the middle</div>
+</div>
+
+<!-- ═══ SLIDE 5: CLAIM RECORD ═══ -->
+<div class="slide" data-chapter="The Solution">
+  <div class="label">The Data Object</div>
+  <h1>What one claim record looks like</h1>
+  <div class="claim-card">
+    <div class="card-label">ClaimRecord</div>
+    <div class="card-claim">SGLT2 inhibitors reduced HbA1c versus placebo in adults with type 2 diabetes at 24 weeks.</div>
+    <div class="card-fields">
+      <div class="field"><div class="fk">Evidence type</div><div class="fv">Randomized controlled trial</div></div>
+      <div class="field"><div class="fk">Effect / N</div><div class="fv">−0.7% HbA1c, n = 1,842</div></div>
+      <div class="field"><div class="fk">Source DOI</div><div class="fv">10.1056/NEJMoa2301…</div></div>
+      <div class="field"><div class="fk">Confidence</div><div class="fv" style="color:var(--accent)">● High</div></div>
+      <div class="field"><div class="fk">Entities</div><div class="fv">SGLT2i, HbA1c, T2D</div></div>
+      <div class="field"><div class="fk">Relations</div><div class="fv">reduces → measured_by</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 6: WHY BITTENSOR ═══ -->
+<div class="slide" data-chapter="Why Bittensor">
+  <div class="label">Why Bittensor</div>
+  <h1>Subnet vs. centralized pipeline</h1>
+  <h2>LLM extraction is probabilistic —<br>aggregating many outputs improves accuracy</h2>
+  <div class="compare">
+    <div class="col dim">
+      <h3>Centralized</h3>
+      <ul>
+        <li>One internal team</li>
+        <li>Few extraction pipelines</li>
+        <li>Outputs vary across runs</li>
+        <li>Repeated adjudication = cost</li>
+        <li>Quality improvement bottlenecked</li>
+      </ul>
+    </div>
+    <div class="col bright">
+      <h3>Claims Subnet</h3>
+      <ul>
+        <li>Many miners, diverse strategies</li>
+        <li>Validators compare &amp; score</li>
+        <li>Competition improves signal</li>
+        <li>Graph improves over time</li>
+        <li>Quality improvement is incentive-aligned</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 7: IMPACT / APPLICATIONS ═══ -->
+<div class="slide" data-chapter="Impact">
+  <div class="label">Impact</div>
+  <h1>Claims accelerates scientific progress</h1>
+  <h2>Claims accelerates scientific progress</h2>
+  <div class="tile-grid">
+    <div class="tile"><span class="tile-icon">🧠</span><span class="tile-title">AI Evidence Memory</span></div>
+    <div class="tile"><span class="tile-icon">🔬</span><span class="tile-title">Grounded Answers</span></div>
+    <div class="tile"><span class="tile-icon">⚡</span><span class="tile-title">Contradiction Tracking</span></div>
+    <div class="tile"><span class="tile-icon">🛡</span><span class="tile-title">AI Evaluation</span></div>
+    <div class="tile"><span class="tile-icon">📋</span><span class="tile-title">Peer Review Tools</span></div>
+    <div class="tile"><span class="tile-icon">📊</span><span class="tile-title">Funder Analytics</span></div>
+  </div>
+  <div class="bottom-line">Claims is a new substrate for evidence-aware applications</div>
+</div>
+
+<!-- ═══ SLIDE 8: MARKET ═══ -->
+<div class="slide" data-chapter="Market">
+  <div class="label">Market</div>
+  <h1>Starting with biomedicine</h1>
+  <h2>The first wedge where evidence quality is commercially expensive</h2>
+  <div class="wedge-layout">
+    <div class="wedge-stack">
+      <div class="wedge-block">Biotech</div>
+      <div class="wedge-block">Medicine</div>
+      <div class="wedge-block">Pharma</div>
+    </div>
+    <div class="wedge-details">
+      <div class="wedge-item">
+        <h4>Early customers</h4>
+        <p>Pharma R&D, biotech, scientific AI builders, evidence-heavy enterprise</p>
+      </div>
+      <div class="wedge-item">
+        <h4>Product value</h4>
+        <p>Low-latency, auditable, trustworthy claim-level database with provenance</p>
+      </div>
+      <div class="wedge-item">
+        <h4>Business model</h4>
+        <p>Free low-volume → paid API/MCP → enterprise integrations</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 9: MECHANISM ═══ -->
+<div class="slide" data-chapter="Mechanism">
+  <div class="label">Mechanism</div>
+  <h1>Two-sided incentive design</h1>
+  <h2>Miners compete on quality<br>Validators compete on judgment</h2>
+  <div class="mech-flow">
+    <div class="mech-node">
+      <div class="mn-box"><div class="mn-title">Many Miners</div></div>
+      <div class="mn-chip">Different models, prompts, domain strategies</div>
+      <div class="mn-chip" style="margin-top:4px">Rewarded for quality + valid novelty</div>
+    </div>
+    <div class="mech-arrow">→</div>
+    <div class="mech-node">
+      <div class="mn-box accent-border"><div class="mn-title">Validators</div></div>
+      <div class="mn-chip">Compare · Calibrate · Adjudicate</div>
+      <div class="mn-chip" style="margin-top:4px">Best judges attract trust &amp; stake</div>
+    </div>
+    <div class="mech-arrow">→</div>
+    <div class="mech-node">
+      <div class="mn-box"><div class="mn-title">Canonical Graph</div></div>
+      <div class="mn-chip">Best version becomes canonical</div>
+      <div class="mn-chip" style="margin-top:4px">Hard cases improve reference quality</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 10: STRATEGIC VALUE ═══ -->
+<div class="slide" data-chapter="Strategic Value">
+  <div class="label">Strategic Value</div>
+  <h1>A flagship subnet for real-world utility</h1>
+  <div class="hub-container">
+    <svg class="hub-svg" viewBox="0 0 700 360" xmlns="http://www.w3.org/2000/svg">
+      <!-- Lines from center to spokes -->
+      <line class="hub-line-svg" x1="350" y1="180" x2="350" y2="28"/>
+      <line class="hub-line-svg" x1="350" y1="180" x2="600" y2="68"/>
+      <line class="hub-line-svg" x1="350" y1="180" x2="600" y2="280"/>
+      <line class="hub-line-svg" x1="350" y1="180" x2="350" y2="340"/>
+      <line class="hub-line-svg" x1="350" y1="180" x2="100" y2="280"/>
+      <line class="hub-line-svg" x1="350" y1="180" x2="100" y2="68"/>
+      <!-- Center circle -->
+      <circle class="hub-circle" cx="350" cy="180" r="48"/>
+      <text class="hub-center-text" x="350" y="175" text-anchor="middle">Claims</text>
+      <text class="hub-center-text" x="350" y="193" text-anchor="middle">Subnet</text>
+      <!-- Spoke boxes -->
+      <rect class="spoke-bg" x="285" y="4" width="130" height="32"/>
+      <text class="hub-label" x="350" y="25" text-anchor="middle">Scientific Credibility</text>
+      <rect class="spoke-bg" x="535" y="52" width="130" height="32"/>
+      <text class="hub-label" x="600" y="73" text-anchor="middle">Enterprise Relevance</text>
+      <rect class="spoke-bg" x="535" y="264" width="130" height="32"/>
+      <text class="hub-label" x="600" y="285" text-anchor="middle">Funder Narrative</text>
+      <rect class="spoke-bg" x="280" y="324" width="140" height="32"/>
+      <text class="hub-label" x="350" y="345" text-anchor="middle">Ecosystem Expansion</text>
+      <rect class="spoke-bg" x="22" y="264" width="156" height="32"/>
+      <text class="hub-label" x="100" y="285" text-anchor="middle">Decentralized Knowledge</text>
+      <rect class="spoke-bg" x="30" y="52" width="140" height="32"/>
+      <text class="hub-label" x="100" y="73" text-anchor="middle">AI Infrastructure</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 11: THE ASK ═══ -->
+<div class="slide" data-chapter="The Ask">
+  <div class="label">The Ask</div>
+  <h1>Help us launch this</h1>
+  <h2>We're looking for support that reduces launch friction</h2>
+  <div class="three-col">
+    <div class="tc">
+      <h3>What We Need</h3>
+      <ul>
+        <li>Reduced registration friction</li>
+        <li>Mechanism design feedback</li>
+        <li>Validator &amp; miner visibility</li>
+      </ul>
+    </div>
+    <div class="tc">
+      <h3>Why Now</h3>
+      <ul>
+        <li>Open knowledge graph is missing</li>
+        <li>AI makes this more urgent and feasible</li>
+        <li>All necessary inputs exist</li>
+      </ul>
+    </div>
+    <div class="tc">
+      <h3>Next Milestones</h3>
+      <ul>
+        <li>Finalize validation design</li>
+        <li>Secure early funding</li>
+        <li>Build biomedical demo</li>
+        <li>Benchmark quality</li>
+        <li>Prepare subnet launch</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 12: CLOSING ═══ -->
+<div class="slide title-slide" data-chapter="The Ask">
+  <div class="label">Claims Subnet</div>
+  <div class="title-big" style="font-size:clamp(28px,4.5vw,56px);line-height:1.25;max-width:80%">
+    If Bittensor is going to power knowledge networks that matter, science is the highest-value place to prove it<span class="accent">.</span>
+  </div>
+  <div class="title-sub" style="margin-top:2em;color:var(--fg-muted)">Claims is an attempt to build that proof.</div>
+</div>
+
+</div><!-- /presentation -->
+
+<script>
+(function(){
+  const slides = document.querySelectorAll('.slide');
+  const counter = document.getElementById('slide-counter');
+  const progress = document.getElementById('progress');
+  const chapNav = document.getElementById('chapter-nav');
+  let current = 0;
+  const total = slides.length;
+
+  // Build chapter nav
+  const chapters = [];
+  const chapterMap = {}; // chapter name -> first slide index
+  slides.forEach((s,i) => {
+    const ch = s.dataset.chapter;
+    if(ch && !chapterMap.hasOwnProperty(ch)){
+      chapterMap[ch] = i;
+      chapters.push(ch);
+    }
+  });
+
+  chapters.forEach(ch => {
+    const el = document.createElement('div');
+    el.className = 'ch';
+    el.textContent = ch;
+    el.addEventListener('click', () => goTo(chapterMap[ch]));
+    chapNav.appendChild(el);
+  });
+
+  function updateChapterNav(){
+    const currentChapter = slides[current].dataset.chapter;
+    const chEls = chapNav.querySelectorAll('.ch');
+    chEls.forEach(el => {
+      el.classList.remove('active','visited');
+      const elCh = el.textContent;
+      if(elCh === currentChapter) el.classList.add('active');
+      else if(chapterMap[elCh] < current) el.classList.add('visited');
+    });
+  }
+
+  function goTo(idx){
+    if(idx < 0 || idx >= total) return;
+    slides[current].classList.remove('active');
+    current = idx;
+    slides[current].classList.add('active');
+    counter.textContent = (current + 1) + ' / ' + total;
+    progress.style.width = ((current / (total - 1)) * 100) + '%';
+    updateChapterNav();
+  }
+
+  function next(){ goTo(Math.min(current + 1, total - 1)) }
+  function prev(){ goTo(Math.max(current - 1, 0)) }
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if(e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown'){e.preventDefault(); next()}
+    if(e.key === 'ArrowLeft' || e.key === 'Backspace' || e.key === 'ArrowUp'){e.preventDefault(); prev()}
+  });
+
+  // Touch / Click
+  let touchX = 0;
+  document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX }, {passive:true});
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchX;
+    if(Math.abs(dx) > 40){
+      if(dx < 0) next(); else prev();
+    }
+  }, {passive:true});
+
+  document.addEventListener('click', e => {
+    // Ignore clicks on chapter nav
+    if(e.target.closest('#chapter-nav')) return;
+    const x = e.clientX / window.innerWidth;
+    if(x > 0.65) next();
+    else if(x < 0.35) prev();
+  });
+
+  // Init
+  goTo(0);
+})();
+</script>
+</body>
+</html>
