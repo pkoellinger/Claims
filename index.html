@@ -2,848 +2,1688 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Claims Subnet — Pitch Deck</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<title>Claims — Pitch Deck · Bittensor Subnet Proposal · 2026</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0a0a0f;
-  --bg-card:#12121a;
-  --bg-card-alt:#181824;
-  --fg:#e8e8ef;
-  --fg-dim:#9d9db4;
-  --fg-muted:#6e6e88;
-  --accent:#00d4aa;
-  --accent-dim:rgba(0,212,170,0.12);
-  --accent-glow:rgba(0,212,170,0.06);
-  --rust:#e8614d;
-  --rust-dim:rgba(232,97,77,0.12);
-  --font-mono:'JetBrains Mono',monospace;
-  --font-body:'DM Sans',sans-serif;
-}
-html,body{
-  width:100%;height:100%;overflow:hidden;
-  background:var(--bg);color:var(--fg);
-  font-family:var(--font-body);
-  -webkit-font-smoothing:antialiased;
+/* ======================================================================
+   DESIGN TOKENS — Deck Design Spec v3 · May 2026
+   ====================================================================== */
+:root {
+  --color-ink:        #0B1220;
+  --color-paper:      #FFFFFF;
+  --color-parchment:  #F7F5F0;
+  --color-fog:        #E7EAEF;
+  --color-graphite:   #4A5160;
+  --color-mist:       #B5BAC4;
+  --color-claims-blue:#2D4F8E;
+  --color-atmosphere: #8FA4C4;
+  --color-copper:     #B87333;
+  --color-moss:       #3C6E47;
+  --color-signal:     #C8451A;
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --space-4xl: 96px;
+
+  --stage-w: 1920px;
+  --stage-h: 1080px;
+  --edge-band-w: 64px;
+  --safe-left: 128px;
+  --safe-right: 80px;
+  --safe-top: 72px;
+  --safe-bottom: 56px;
+  --col-w: 123px;
+  --col-gutter: 24px;
+
+  --stroke-hairline: 0.5px;
+  --stroke-rule: 1px;
+  --stroke-heavy: 2px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+
+  --font-family: "Inter", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
 }
 
-/* ── Presentation container ── */
-#presentation{width:100%;height:100%;position:relative}
-
-.slide{
-  position:absolute;top:0;left:0;
-  width:100vw;height:100vh;
-  display:none;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  padding:5vh 8vw 5vh 14vw;
-  opacity:0;
-  transition:opacity .5s ease;
-}
-.slide.active{display:flex;opacity:1}
-
-/* ── Chapter navigation (center-left) ── */
-#chapter-nav{
-  position:fixed;left:2.2vw;top:50%;
-  transform:translateY(-50%);
-  z-index:100;
-  display:flex;flex-direction:column;gap:8px;
-  font-family:var(--font-mono);
-  font-size:12px;letter-spacing:.04em;
-  text-transform:uppercase;
-}
-#chapter-nav .ch{
-  color:var(--fg-muted);
-  cursor:pointer;
-  padding:3px 0;
-  transition:color .3s,transform .3s;
-  white-space:nowrap;
-}
-#chapter-nav .ch:hover{color:var(--fg-dim)}
-#chapter-nav .ch.active{color:var(--accent);transform:translateX(4px)}
-#chapter-nav .ch.visited{color:var(--fg-dim)}
-
-/* ── Slide counter ── */
-#slide-counter{
-  position:fixed;bottom:2.5vh;right:3vw;
-  font-family:var(--font-mono);font-size:13px;
-  color:var(--fg-muted);letter-spacing:.06em;
-  z-index:100;
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%;
+  background: #1a1d22;
+  font-family: var(--font-family);
+  color: var(--color-ink);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* ── Progress bar ── */
-#progress{
-  position:fixed;top:0;left:0;height:2px;
-  background:var(--accent);
-  transition:width .4s ease;
-  z-index:200;
+/* ======================================================================
+   STAGE — 1920×1080 native, scaled to viewport via JS
+   ====================================================================== */
+.stage-wrap {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stage {
+  position: relative;
+  width: var(--stage-w);
+  height: var(--stage-h);
+  transform-origin: center center;
+  background: var(--color-paper);
+}
+.slide {
+  position: absolute;
+  inset: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  display: none;
+  font-feature-settings: "ss01", "cv11";
+  overflow: hidden;
+}
+.slide.active { display: block; }
+
+/* Left-edge ink band — fixed on every content slide */
+.slide::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0;
+  width: var(--edge-band-w);
+  height: 100%;
+  background: var(--color-ink);
+  z-index: 2;
+}
+.slide.cover::before,
+.slide.closing::before { display: none; }
+
+/* ======================================================================
+   TYPE SCALE — Inter only, hierarchy via weight, size, tracking
+   ====================================================================== */
+.t-display-xl { font: 300 220px/1 var(--font-family); letter-spacing: -0.035em; font-variant-numeric: tabular-nums; }
+.t-display    { font: 300 200px/1 var(--font-family); letter-spacing: -0.02em;  font-variant-numeric: tabular-nums; }
+.t-title-xl   { font: 300 112px/1.05 var(--font-family); letter-spacing: -0.015em; }
+.t-title-lg   { font: 300 84px/1.1  var(--font-family); letter-spacing: -0.01em; }
+.t-title      { font: 400 56px/1.15 var(--font-family); letter-spacing: -0.005em; }
+.t-subtitle   { font: 400 36px/1.25 var(--font-family); }
+.t-body       { font: 400 32px/1.4  var(--font-family); }
+.t-body-sm    { font: 400 24px/1.4  var(--font-family); }
+.t-meta       { font: 500 18px/1.2  var(--font-family); letter-spacing: 0.14em; text-transform: uppercase; }
+.t-counter    { font: 400 18px/1.2  var(--font-family); letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+.t-hero-num   { font: 300 180px/1   var(--font-family); letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
+
+em { font-style: italic; font-weight: inherit; }
+
+/* ======================================================================
+   PERSISTENT FRAME — title + footer row on every content slide
+   ====================================================================== */
+.slide-title {
+  position: absolute;
+  left: var(--safe-left);
+  top: 128px;
+  right: var(--safe-right);
+  color: var(--color-ink);
+}
+.content {
+  position: absolute;
+  left: var(--safe-left);
+  top: 240px;
+  right: var(--safe-right);
+  bottom: 120px;
+}
+.footer-tab {
+  position: absolute;
+  left: var(--safe-left);
+  bottom: var(--safe-bottom);
+  color: var(--color-graphite);
+}
+.footer-page {
+  position: absolute;
+  left: 50%;
+  bottom: var(--safe-bottom);
+  transform: translateX(-50%);
+  color: var(--color-mist);
+}
+.footer-logo {
+  position: absolute;
+  right: var(--safe-right);
+  bottom: var(--safe-bottom);
+  color: var(--color-ink);
+  display: flex;
+  align-items: center;
+}
+.footer-logo .wordmark {
+  font: 500 22px/1 var(--font-family);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
-/* ── Global typography ── */
-.slide h1{
-  font-family:var(--font-body);
-  font-weight:700;font-size:clamp(32px,5vw,64px);
-  line-height:1.1;letter-spacing:-.02em;
-  margin-bottom:.4em;
-  max-width:80%;
-  text-align:center;
+.ref-strip {
+  position: absolute;
+  left: var(--safe-left);
+  right: var(--safe-right);
+  bottom: 110px;
+  padding-top: var(--space-md);
+  border-top: 0.5px solid var(--color-mist);
+  font: 400 14px/1.45 var(--font-family);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-graphite);
 }
-.slide h2{
-  font-family:var(--font-body);
-  font-weight:500;font-size:clamp(18px,2.2vw,28px);
-  line-height:1.35;
-  color:var(--fg-dim);
-  max-width:70%;
-  text-align:center;
-  margin-bottom:1.5em;
+.ref-strip p { padding-left: 20px; text-indent: -20px; }
+
+/* ======================================================================
+   ARCHETYPE — COVER (§4.1)
+   ====================================================================== */
+.slide.cover {
+  background: var(--color-ink);
+  color: var(--color-paper);
 }
-.slide .label{
-  font-family:var(--font-mono);font-size:clamp(11px,1.1vw,15px);
-  text-transform:uppercase;letter-spacing:.1em;
-  color:var(--accent);
-  margin-bottom:1.2em;
+.cover .hero-art {
+  position: absolute;
+  inset: 0;
+  background-image: url("Logos and pictures/cover-art.jpg");
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-color: var(--color-ink);
+  z-index: 0;
+}
+.cover .overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 50%, rgba(11,18,32,0.45) 72%, rgba(11,18,32,0.85) 100%);
+  z-index: 1;
+}
+.cover-text {
+  position: absolute;
+  left: 160px;
+  right: 160px;
+  bottom: 100px;
+  z-index: 3;
+  color: var(--color-paper);
+}
+.cover-title {
+  color: var(--color-paper);
+  margin-bottom: var(--space-lg);
+}
+.cover-subtitle {
+  font: 300 italic 36px/1.25 var(--font-family);
+  color: var(--color-paper);
+  opacity: 0.9;
+  margin-bottom: var(--space-2xl);
+}
+.cover-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2xl);
+}
+.cover-tagline {
+  color: var(--color-mist);
+  font: 400 22px/1.2 var(--font-family);
+}
+.cover-eyebrow {
+  color: var(--color-mist);
 }
 
-/* ── Stat blocks ── */
-.stat-row{display:flex;gap:clamp(24px,5vw,80px);margin-top:1em;flex-wrap:wrap;justify-content:center}
-.stat{text-align:center}
-.stat .num{
-  font-family:var(--font-mono);font-weight:700;
-  font-size:clamp(42px,7vw,96px);
-  color:var(--accent);line-height:1;
+/* ======================================================================
+   ARCHETYPE — HERO STAT + SUPPORTING TILES (§4.3 variant)
+   ====================================================================== */
+.hero-eyebrow {
+  font: 500 18px/1.2 var(--font-family);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-mist);
 }
-.stat .num.rust{color:var(--rust)}
-.stat .desc{
-  font-size:clamp(12px,1.3vw,16px);
-  color:var(--fg-dim);margin-top:.4em;
-  max-width:220px;
+.hero-context {
+  color: var(--color-graphite);
+  font: 500 22px/1.2 var(--font-family);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-2xl);
+}
+.hero-numeral {
+  color: var(--color-ink);
+  margin: 0;
+}
+.hero-support {
+  color: var(--color-graphite);
+  margin-top: var(--space-2xl);
+  font: 300 48px/1.25 var(--font-family);
+  letter-spacing: -0.005em;
+  max-width: 1500px;
+}
+.hero-support .line { display: block; }
+
+.support-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2xl);
+  margin-top: var(--space-4xl);
+  max-width: 1400px;
+}
+.support-tile { display: flex; flex-direction: column; }
+.support-tile .rule {
+  height: 2px;
+  background: var(--color-ink);
+  margin-bottom: var(--space-md);
+}
+.support-tile .num {
+  font: 300 80px/1 var(--font-family);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+.support-tile.copper .num { color: var(--color-copper); }
+.support-tile.copper .rule { background: var(--color-copper); }
+.support-tile .lbl {
+  font: 400 20px/1.3 var(--font-family);
+  color: var(--color-graphite);
+  margin-top: var(--space-sm);
 }
 
-/* ── Pipeline diagram ── */
-.pipeline{
-  display:flex;align-items:center;gap:0;
-  flex-wrap:nowrap;
-  margin:1.5em 0;
-  width:100%;
-  max-width:900px;
-  justify-content:center;
+/* ======================================================================
+   ARCHETYPE — SHORT-LIST (§4.4)
+   ====================================================================== */
+.short-list {
+  list-style: none;
+  max-width: calc(8 * var(--col-w) + 7 * var(--col-gutter));
 }
-.pipe-node{
-  background:var(--bg-card);
-  border:1px solid var(--fg-muted);
-  border-radius:8px;
-  padding:clamp(12px,2vw,24px) clamp(14px,2vw,28px);
-  font-family:var(--font-mono);
-  font-size:clamp(11px,1.2vw,15px);
-  text-align:center;
-  white-space:nowrap;
-  flex-shrink:0;
+.short-list li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xl);
+  padding: 24px 0;
+  font: 400 32px/1.35 var(--font-family);
+  color: var(--color-ink);
 }
-.pipe-node.highlight{
-  border-color:var(--accent);
-  background:var(--accent-dim);
-  color:var(--accent);
-  font-weight:700;
+.short-list li .rule {
+  flex: 0 0 32px;
+  height: 1px;
+  background: var(--color-graphite);
+  position: relative;
+  top: -10px;
 }
-.pipe-arrow{
-  color:var(--fg-muted);
-  font-size:clamp(16px,2vw,24px);
-  margin:0 clamp(4px,1vw,12px);
-  flex-shrink:0;
+.short-list .sub {
+  display: block;
+  font: 300 28px/1.3 var(--font-family);
+  color: var(--color-graphite);
+  margin-top: var(--space-sm);
 }
-
-/* ── Claim card ── */
-.claim-card{
-  background:var(--bg-card);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:12px;
-  padding:clamp(20px,3vw,36px);
-  max-width:680px;width:100%;
-  margin:1em 0;
-}
-.claim-card .card-label{
-  font-family:var(--font-mono);font-size:12px;
-  text-transform:uppercase;letter-spacing:.1em;
-  color:var(--accent);margin-bottom:12px;
-}
-.claim-card .card-claim{
-  font-size:clamp(14px,1.6vw,18px);line-height:1.5;
-  color:var(--fg);margin-bottom:18px;
-  border-left:2px solid var(--accent);
-  padding-left:16px;
-}
-.claim-card .card-fields{
-  display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;
-}
-.claim-card .field{font-size:clamp(11px,1vw,13px)}
-.claim-card .field .fk{
-  font-family:var(--font-mono);color:var(--fg-muted);
-  text-transform:uppercase;font-size:10px;letter-spacing:.08em;
-}
-.claim-card .field .fv{color:var(--fg-dim);margin-top:2px}
-
-/* ── Comparison columns ── */
-.compare{
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:clamp(16px,3vw,48px);
-  max-width:900px;width:100%;
-  margin:1em 0;
-}
-.compare .col{
-  border-radius:12px;
-  padding:clamp(18px,2.5vw,32px);
-}
-.compare .col.dim{
-  background:var(--bg-card);
-  border:1px solid rgba(255,255,255,.05);
-}
-.compare .col.bright{
-  background:var(--accent-dim);
-  border:1px solid rgba(0,212,170,.2);
-}
-.compare .col h3{
-  font-family:var(--font-mono);font-size:clamp(12px,1.2vw,15px);
-  text-transform:uppercase;letter-spacing:.08em;
-  margin-bottom:16px;
-}
-.compare .col.dim h3{color:var(--fg-muted)}
-.compare .col.bright h3{color:var(--accent)}
-.compare .col ul{list-style:none;padding:0}
-.compare .col ul li{
-  font-size:clamp(12px,1.2vw,15px);
-  color:var(--fg-dim);line-height:1.5;
-  padding:6px 0;
-  border-bottom:1px solid rgba(255,255,255,.04);
-}
-.compare .col.bright ul li{color:var(--fg)}
-
-/* ── App tiles ── */
-.tile-grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:clamp(10px,1.5vw,20px);
-  max-width:780px;width:100%;
-  margin:1em 0;
-}
-.tile{
-  background:var(--bg-card);
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:10px;
-  padding:clamp(14px,2vw,28px) clamp(12px,1.5vw,20px);
-  text-align:center;
-  transition:border-color .3s, background .3s;
-}
-.tile:hover{border-color:rgba(0,212,170,.25);background:var(--accent-dim)}
-.tile .tile-icon{
-  font-size:clamp(22px,2.8vw,36px);
-  margin-bottom:8px;
-  display:block;
-}
-.tile .tile-title{
-  font-family:var(--font-mono);
-  font-size:clamp(11px,1.1vw,14px);
-  text-transform:uppercase;letter-spacing:.06em;
-  color:var(--fg);
+.short-list .item-head {
+  font-weight: 500;
 }
 
-/* ── Three-column layout ── */
-.three-col{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  gap:clamp(12px,2vw,32px);
-  max-width:900px;width:100%;
-  margin:1em 0;
+/* ======================================================================
+   ARCHETYPE — METRIC TILE ROW (§4.5)
+   ====================================================================== */
+.tile-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4xl);
+  align-items: start;
+  width: 100%;
 }
-.three-col .tc{
-  background:var(--bg-card);
-  border-radius:10px;
-  padding:clamp(16px,2vw,28px);
-  border:1px solid rgba(255,255,255,.05);
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
 }
-.three-col .tc h3{
-  font-family:var(--font-mono);font-size:clamp(11px,1.1vw,14px);
-  text-transform:uppercase;letter-spacing:.08em;
-  color:var(--accent);margin-bottom:14px;
+/* Fixed-height top row shared by both tiles and the central hub.
+   The rule line in a tile and the arrow line in the hub both sit at
+   the vertical center of this row, so they align across all three columns. */
+.tile-top {
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.three-col .tc ul{list-style:none;padding:0}
-.three-col .tc ul li{
-  font-size:clamp(12px,1.2vw,14px);
-  color:var(--fg-dim);line-height:1.5;
-  padding:5px 0;
-  border-bottom:1px solid rgba(255,255,255,.03);
+.tile-top .tile-rule {
+  height: 2px;
+  width: 100%;
+  background: var(--color-ink);
+  margin: 0;
 }
-.three-col .tc ul li:last-child{border:none}
+.tile .tile-numeral {
+  font: 300 80px/1 var(--font-family);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  white-space: nowrap;
+  margin-top: var(--space-md);
+}
+.tile .tile-label {
+  font: 400 22px/1.35 var(--font-family);
+  color: var(--color-graphite);
+  margin-top: var(--space-md);
+  text-align: left;
+}
+.tile .tile-delta {
+  font: 500 16px/1.3 var(--font-family);
+  margin-top: var(--space-sm);
+  letter-spacing: 0.02em;
+  text-align: left;
+}
+.tile .tile-delta.pos { color: var(--color-moss); }
+.tile .tile-delta.copper { color: var(--color-copper); }
 
-/* ── Mechanism flow ── */
-.mech-flow{
-  display:flex;align-items:flex-start;
-  gap:0;justify-content:center;
-  max-width:900px;width:100%;
-  margin:1em 0;
-  flex-wrap:nowrap;
+/* Slide 7 — Claims hub (center column between the two market tiles).
+   The hub wordmark uses the exact same type as the tile numerals so all three
+   ("$20–50B", "Claims", "$5–9B") read as equally weighted, equally tall. */
+.claims-hub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0;
 }
-.mech-node{
-  text-align:center;flex:1;max-width:260px;
-}
-.mech-node .mn-box{
-  background:var(--bg-card);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:10px;
-  padding:clamp(14px,2vw,24px) clamp(10px,1.5vw,18px);
-  margin-bottom:10px;
-}
-.mech-node .mn-box.accent-border{border-color:rgba(0,212,170,.3)}
-.mech-node .mn-title{
-  font-family:var(--font-mono);font-weight:700;
-  font-size:clamp(12px,1.3vw,16px);
-  color:var(--fg);
-}
-.mech-node .mn-chip{
-  font-size:clamp(11px,1vw,13px);
-  color:var(--fg-dim);
-  background:var(--bg-card-alt);
-  border-radius:6px;
-  padding:6px 10px;
-  margin-top:6px;
-  line-height:1.35;
-}
-.mech-arrow{
-  display:flex;align-items:center;
-  color:var(--accent);
-  font-size:clamp(18px,2.5vw,28px);
-  padding-top:clamp(12px,2vw,24px);
-  flex-shrink:0;
-  margin:0 clamp(2px,.8vw,8px);
-}
-
-/* ── Hub diagram ── */
-.hub-container{
-  position:relative;
-  width:100%;max-width:700px;
-  margin:1.5em 0;
-}
-.hub-svg{width:100%;height:auto}
-.hub-svg text.hub-label{
-  font-family:'JetBrains Mono',monospace;
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.06em;
-  fill:var(--fg-dim);
-}
-.hub-svg text.hub-center-text{
-  font-family:'JetBrains Mono',monospace;
-  font-size:13px;
-  font-weight:700;
-  fill:var(--accent);
-}
-.hub-svg .hub-line-svg{stroke:rgba(0,212,170,.2);stroke-width:1}
-.hub-svg .hub-circle{fill:var(--accent-dim);stroke:var(--accent);stroke-width:1.5}
-.hub-svg .spoke-bg{fill:var(--bg-card);stroke:rgba(255,255,255,.08);stroke-width:1;rx:6}
-
-/* ── Closing line ── */
-.closing-line{
-  font-size:clamp(14px,1.6vw,20px);
-  color:var(--fg-dim);
-  max-width:700px;
-  text-align:center;
-  line-height:1.6;
-  margin-top:1.5em;
-  font-style:italic;
+.claims-hub .hub-wordmark {
+  font: 300 80px/1 var(--font-family);
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  white-space: nowrap;
+  margin-top: var(--space-md);
 }
 
-/* ── Bottom-line bar ── */
-.bottom-line{
-  background:var(--accent-dim);
-  border-radius:8px;
-  padding:clamp(10px,1.5vw,16px) clamp(16px,2.5vw,32px);
-  font-family:var(--font-mono);
-  font-size:clamp(12px,1.2vw,15px);
-  color:var(--accent);
-  text-align:center;
-  margin-top:1.5em;
-  max-width:700px;
-  width:100%;
+/* ======================================================================
+   NAV CHROME (hidden in print)
+   ====================================================================== */
+.nav {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(11,18,32,0.85);
+  padding: 8px 16px;
+  border-radius: 999px;
+  z-index: 100;
+  color: var(--color-paper);
+  font: 500 13px/1 var(--font-family);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+.nav button {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.3);
+  color: var(--color-paper);
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.nav button:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.6); }
+.nav .counter { font-variant-numeric: tabular-nums; min-width: 70px; text-align: center; }
+.nav .fs-btn { font-size: 16px; }
+
+/* ======================================================================
+   TRANSITIONS
+   ====================================================================== */
+.slide.active { animation: slide-in 0.35s ease-out; }
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
-/* ── Title slide specifics ── */
-.slide.title-slide{position:relative}
-.slide.title-slide::before{
-  content:'';position:absolute;
-  top:0;left:0;right:0;bottom:0;
+/* ======================================================================
+   ARCHETYPE — TEAM (custom three-column)
+   ====================================================================== */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3xl);
+  width: 100%;
+  align-items: start;
+}
+.team-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.portrait {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--color-fog);
+  border: 3px solid var(--color-ink);
+  margin-bottom: var(--space-lg);
+  flex-shrink: 0;
+}
+.portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.team-name {
+  font: 500 30px/1.2 var(--font-family);
+  color: var(--color-ink);
+  margin-bottom: var(--space-sm);
+}
+.team-role {
+  font: 400 22px/1.35 var(--font-family);
+  color: var(--color-graphite);
+  margin-bottom: var(--space-lg);
+  min-height: 62px;
+  text-align: center;
+}
+.team-role .role-2 {
+  display: block;
+}
+.team-headline {
+  font: 400 22px/1.45 var(--font-family);
+  color: var(--color-ink);
+  margin-bottom: var(--space-xl);
+  text-align: center;
+  min-height: 168px;
+  max-width: 480px;
+}
+.team-headline em { font-style: italic; font-weight: inherit; }
+.logo-rows {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.logo-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+}
+.logo-row img {
+  height: 36px;
+  width: auto;
+  max-width: 110px;
+  object-fit: contain;
+  filter: grayscale(100%) brightness(0.4) contrast(1.2);
+  opacity: 0.85;
+}
+
+/* ======================================================================
+   ARCHETYPE — DISPLAY QUOTE CARD (§4.10 display variant)
+   ====================================================================== */
+.quote-display {
+  background: var(--color-parchment);
+  border-radius: var(--radius-lg);
+  padding: 80px 100px 80px 100px;
+  position: relative;
+  max-width: 1280px;
+}
+.quote-display .qmark {
+  font: 300 120px/0.7 var(--font-family);
+  color: var(--color-claims-blue);
+  position: absolute;
+  top: 32px;
+  left: 48px;
+}
+.quote-display .qbody {
+  font: 400 44px/1.4 var(--font-family);
+  color: var(--color-ink);
+  margin-top: 60px;
+}
+.quote-context {
+  font: 400 24px/1.45 var(--font-family);
+  color: var(--color-graphite);
+  margin-top: var(--space-2xl);
+  max-width: 1560px;
+}
+
+/* ======================================================================
+   ARCHETYPE — CLOSING (§4.12)
+   ====================================================================== */
+.slide.closing {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+.closing .hero-art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url("Logos and pictures/finish-art.jpg");
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-color: var(--color-ink);
+}
+.closing .overlay {
+  position: absolute; inset: 0; z-index: 1;
   background:
-    radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,212,170,.04) 0%, transparent 70%);
-  pointer-events:none;
+    radial-gradient(ellipse 55% 45% at 20% 78%, rgba(11,18,32,0.70) 0%, rgba(11,18,32,0.25) 65%, transparent 100%);
 }
-.title-big{
-  font-family:var(--font-body);
-  font-weight:700;
-  font-size:clamp(48px,8vw,112px);
-  letter-spacing:-.03em;
-  line-height:1;
-  text-align:center;
+.closing-text {
+  position: absolute;
+  left: 160px;
+  bottom: 100px;
+  z-index: 3;
+  color: var(--color-paper);
+  max-width: 900px;
 }
-.title-big .accent{color:var(--accent)}
-.title-sub{
-  font-family:var(--font-mono);
-  font-size:clamp(12px,1.4vw,17px);
-  color:var(--fg-dim);
-  margin-top:1.2em;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  text-align:center;
+.closing-headline {
+  font: 300 112px/1.05 var(--font-family);
+  letter-spacing: -0.015em;
+  color: var(--color-paper);
+  margin-bottom: var(--space-xl);
 }
-.title-tag{
-  font-size:clamp(12px,1.2vw,15px);
-  color:var(--fg-muted);
-  margin-top:2em;
-  text-align:center;
+.closing-name {
+  font: 300 32px/1.35 var(--font-family);
+  color: var(--color-paper);
+}
+.closing-email {
+  font: 300 32px/1.35 var(--font-family);
+  color: var(--color-mist);
 }
 
-/* ── Source line ── */
-.source{
-  font-family:var(--font-mono);
-  font-size:clamp(10px,.9vw,13px);
-  color:var(--fg-dim);
-  margin-top:1.5em;
-  text-align:center;
-  max-width:600px;
+/* ======================================================================
+   SLIDE-SPECIFIC LAYOUT HELPERS
+   ====================================================================== */
+
+/* Slide 3 — hallucination bar chart */
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xl);
+  margin-bottom: var(--space-2xl);
+}
+.bar-row .bar-label {
+  flex: 0 0 280px;
+  font: 500 24px/1.2 var(--font-family);
+  color: var(--color-ink);
+}
+.bar-row .bar-track {
+  flex: 1;
+  height: 56px;
+  position: relative;
+  background: transparent;
+}
+.bar-row .bar-fill {
+  position: absolute;
+  left: 0; top: 0;
+  height: 100%;
+}
+.bar-row .bar-value {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font: 300 40px/1 var(--font-family);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
 }
 
-/* ── Bullet list ── */
-.bullet-list{
-  list-style:none;padding:0;
-  max-width:600px;width:100%;
-}
-.bullet-list li{
-  font-size:clamp(14px,1.5vw,18px);
-  color:var(--fg-dim);line-height:1.5;
-  padding:8px 0 8px 24px;
-  position:relative;
-}
-.bullet-list li::before{
-  content:'';position:absolute;
-  left:0;top:50%;
-  width:6px;height:6px;
-  border-radius:50%;
-  background:var(--accent);
-  transform:translateY(-50%);
+/* Slide 4 — purpose / negative space */
+.purpose-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4xl);
+  height: 100%;
+  align-items: center;
 }
 
-/* ── Wedge layout ── */
-.wedge-layout{
-  display:grid;grid-template-columns:1fr 2fr;
-  gap:clamp(20px,3vw,48px);
-  max-width:850px;width:100%;
-  margin:1em 0;
-  align-items:stretch;
+/* Slide 10 — two-tier stack */
+.stack-substrate {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  background: var(--color-fog);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-md);
 }
-.wedge-stack{
-  display:flex;flex-direction:column;gap:8px;
-  justify-content:stretch;
+.stack-substrate-label {
+  position: absolute;
+  top: 28px;
+  left: 32px;
+  z-index: 2;
 }
-.wedge-block{
-  background:var(--accent-dim);
-  border:1px solid rgba(0,212,170,.15);
-  border-radius:8px;
-  padding:clamp(12px,1.5vw,20px);
-  font-family:var(--font-mono);
-  font-size:clamp(12px,1.2vw,15px);
-  color:var(--accent);
-  text-align:center;
-  font-weight:500;
-  flex:1;
-  display:flex;align-items:center;justify-content:center;
+.stack-substrate-label .lbl-head {
+  font: 500 22px/1.2 var(--font-family);
+  color: var(--color-ink);
 }
-.wedge-details{
-  display:flex;flex-direction:column;gap:8px;
+.stack-substrate-label .lbl-sub {
+  font: 400 18px/1.3 var(--font-family);
+  color: var(--color-graphite);
+  margin-top: var(--space-xs);
 }
-.wedge-item{
-  background:var(--bg-card);
-  border:1px solid rgba(255,255,255,.05);
-  border-radius:8px;
-  padding:clamp(12px,1.5vw,18px);
+.stack-exits {
+  position: absolute;
+  right: 32px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  font: 500 16px/1 var(--font-family);
+  color: var(--color-ink);
+  z-index: 2;
 }
-.wedge-item h4{
-  font-family:var(--font-mono);font-size:clamp(10px,.9vw,12px);
-  text-transform:uppercase;letter-spacing:.08em;
-  color:var(--fg-muted);margin-bottom:6px;
+.stack-exits .pill {
+  background: var(--color-paper);
+  border: 1px solid var(--color-ink);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font: 500 14px/1 var(--font-family);
+  letter-spacing: 0.08em;
 }
-.wedge-item p{
-  font-size:clamp(12px,1.2vw,15px);
-  color:var(--fg-dim);line-height:1.45;
-}
-
-/* ── Responsive ── */
-@media(max-width:768px){
-  .slide{padding:4vh 6vw 4vh 16vw}
-  #chapter-nav{left:2vw;font-size:8px;gap:4px}
-  .pipeline{flex-wrap:wrap;justify-content:center}
-  .compare{grid-template-columns:1fr}
-  .tile-grid{grid-template-columns:repeat(2,1fr)}
-  .three-col{grid-template-columns:1fr}
-  .mech-flow{flex-direction:column;align-items:center}
-  .mech-arrow{transform:rotate(90deg);padding:0;margin:4px 0}
-  .wedge-layout{grid-template-columns:1fr}
-  .hub{width:260px;height:260px}
-  .claim-card .card-fields{grid-template-columns:1fr}
+.stack-exits .arrow { color: var(--color-graphite); font-size: 18px; }
+.stack-exits .consumers {
+  font: 400 16px/1.3 var(--font-family);
+  color: var(--color-graphite);
+  max-width: 360px;
 }
 
-@media(max-width:480px){
-  .slide{padding:3vh 4vw 3vh 18vw}
-  .title-big{font-size:clamp(36px,10vw,56px)}
-  .tile-grid{grid-template-columns:1fr 1fr}
+.ontology-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2xl);
+  margin-top: var(--space-2xl);
+}
+.ontology-card {
+  background: var(--color-paper);
+  border: 1px solid var(--color-mist);
+  border-radius: var(--radius-md);
+  padding: var(--space-xl);
+  height: 230px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.ontology-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--card-accent, var(--color-claims-blue));
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.ontology-card .card-head {
+  font: 500 16px/1.2 var(--font-family);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--card-accent, var(--color-claims-blue));
+  margin-bottom: var(--space-md);
+}
+
+.workflow-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2xl);
+  margin-bottom: var(--space-md);
+}
+.workflow-label {
+  font: 300 22px/1.3 var(--font-family);
+  color: var(--color-graphite);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.workflow-label .arrow {
+  display: inline-block;
+  width: 24px;
+  height: 1px;
+  background: var(--color-graphite);
+  position: relative;
+}
+.workflow-label .arrow::after {
+  content: "";
+  position: absolute;
+  right: -1px; top: -3px;
+  width: 0; height: 0;
+  border-left: 6px solid var(--color-graphite);
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+}
+
+/* Slide 11 — Why Bittensor */
+.bittensor-list {
+  list-style: none;
+  max-width: 1500px;
+}
+.bittensor-list li {
+  padding: 24px 0;
+}
+.bittensor-list li .head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xl);
+  font: 400 32px/1.3 var(--font-family);
+  color: var(--color-ink);
+}
+.bittensor-list li .head .rule {
+  flex: 0 0 32px;
+  height: 1px;
+  background: var(--color-graphite);
+  position: relative;
+  top: -10px;
+}
+.bittensor-list li .head strong {
+  font-weight: 500;
+}
+.bittensor-list li .head .copy {
+  flex: 1;
+}
+
+/* Slide 12 — business model + moat */
+.bm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  gap: var(--space-3xl);
+  align-items: stretch;
+}
+/* The middle divider stretches with the grid; margin-top pushes its top down so
+   it starts where the boxes start (i.e., below the column headers), and the bottom
+   ends at the grid's bottom (which is where the boxes end since we removed
+   height: 100% from .bm-grid above). Net effect: divider == box-stack height. */
+.bm-divider {
+  background: var(--color-mist);
+  margin-top: 72px;
+}
+.bm-col-head {
+  font: 500 20px/1.2 var(--font-family);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-2xl);
+}
+.revenue-stack,
+.moat-stack {
+  display: flex;
+  gap: var(--space-md);
+}
+.revenue-stack { flex-direction: column; }
+/* Source order is l3 → l2 → l1; column-reverse renders l1 visually on top */
+.moat-stack { flex-direction: column-reverse; }
+
+/* Shared block styling — uniform padding so all six boxes sit at the same
+   horizontal y across the two columns. Grey progression top→bottom, with
+   the ink left border thickening top→bottom on both sides for symmetric
+   reading. Text stays color.ink throughout for strong contrast on grey. */
+.revenue-block,
+.moat-layer {
+  border-left: 4px solid var(--color-ink);
+  padding: var(--space-lg) var(--space-xl);
+  font: 400 22px/1.35 var(--font-family);
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+.revenue-block strong,
+.moat-layer strong { font-weight: 500; }
+
+.revenue-block.b1, .moat-layer.l1 { background: #ECEEF2; border-left-width: 4px; }
+.revenue-block.b2, .moat-layer.l2 { background: #D8DBE0; border-left-width: 5px; }
+.revenue-block.b3, .moat-layer.l3 { background: #C0C4CB; border-left-width: 6px; }
+
+/* Slide 13 — traction tiles */
+.proof-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3xl);
+  margin-bottom: var(--space-2xl);
+}
+.proof-tile { display: flex; flex-direction: column; }
+.proof-tile .ptn {
+  font: 300 106px/1 var(--font-family);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.025em;
+  color: var(--color-ink);
+}
+.proof-tile.copper .ptn { color: var(--color-copper); }
+.proof-tile .ptl {
+  font: 400 18px/1.35 var(--font-family);
+  color: var(--color-graphite);
+  margin-top: var(--space-sm);
+}
+
+/* Slide 14 — roadmap */
+.roadmap-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.roadmap-axis-line {
+  position: absolute;
+  left: 4%;
+  right: 12%;
+  top: 200px;
+  height: 1px;
+  background: var(--color-ink);
+}
+.roadmap-tick {
+  position: absolute;
+  width: 1px;
+  height: 16px;
+  background: var(--color-ink);
+  top: 192px;
+}
+.roadmap-tick .lbl {
+  position: absolute;
+  top: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  font: 500 18px/1 var(--font-family);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-graphite);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.phase-cols {
+  position: absolute;
+  top: 240px;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2xl);
+}
+.phase-col h3 {
+  font: 500 30px/1.2 var(--font-family);
+  color: var(--color-ink);
+  margin-bottom: var(--space-lg);
+}
+.phase-col ul {
+  list-style: none;
+  margin-bottom: var(--space-xl);
+}
+.phase-col li {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-start;
+  padding: 8px 0;
+  font: 400 22px/1.35 var(--font-family);
+  color: var(--color-ink);
+}
+.phase-col li::before {
+  content: "";
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  margin-top: 12px;
+  border-radius: 50%;
+  background: var(--color-claims-blue);
+}
+.phase-gate {
+  display: inline-block;
+  background: var(--color-copper);
+  color: var(--color-paper);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font: 500 16px/1.2 var(--font-family);
+  letter-spacing: 0.06em;
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* Slide takeaways — generic centered line */
+.takeaway {
+  position: absolute;
+  left: var(--safe-left);
+  right: var(--safe-right);
+  bottom: 130px;
+  text-align: center;
+  font: 300 28px/1.35 var(--font-family);
+  color: var(--color-graphite);
+}
+.takeaway strong { font-weight: 400; color: var(--color-ink); }
+
+/* ======================================================================
+   PRINT  (§8)
+   ====================================================================== */
+@media print {
+  @page { size: A4 landscape; margin: 0; }
+  html, body { background: white; overflow: visible; height: auto; }
+  .nav { display: none !important; }
+  .stage-wrap { position: static; display: block; }
+  .stage { transform: none !important; width: 297mm; height: 210mm; }
+  .slide {
+    display: block !important;
+    position: relative;
+    width: 297mm;
+    height: 210mm;
+    page-break-after: always;
+    overflow: hidden;
+    animation: none;
+  }
+  .slide:last-child { page-break-after: auto; }
+
+  .slide::before {
+    width: 1.5pt !important;
+    background: var(--color-ink) !important;
+  }
+
+  .slide.cover, .slide.closing { background: white !important; }
+  .slide.cover .hero-art, .slide.closing .hero-art { opacity: 0.15 !important; }
+  .slide.cover .overlay, .slide.closing .overlay { display: none !important; }
+  .slide.cover .cover-title,
+  .slide.cover .cover-subtitle,
+  .slide.cover .cover-tagline,
+  .slide.cover .cover-eyebrow,
+  .slide.closing .closing-headline,
+  .slide.closing .closing-name { color: var(--color-ink) !important; }
+  .slide.closing .closing-email { color: var(--color-graphite) !important; }
+
+  .stage { font-size: 14px; }
 }
 </style>
 </head>
 <body>
 
-<div id="progress"></div>
+<div class="stage-wrap">
+  <div class="stage" id="stage">
 
-<nav id="chapter-nav"></nav>
-
-<div id="slide-counter"></div>
-
-<div id="presentation">
-
-<!-- ═══ SLIDE 0: TITLE ═══ -->
-<div class="slide title-slide" data-chapter="">
-  <div class="label">Bittensor Subnet</div>
-  <div class="title-big">Claims<span class="accent">.</span></div>
-  <div class="title-sub">The programmable evidence layer for science</div>
-  <div class="title-tag">Open scientific infrastructure &middot; Public-good &amp; commercial value</div>
-</div>
-
-<!-- ═══ SLIDE 1: THE PROBLEM ═══ -->
-<div class="slide" data-chapter="The Problem">
-  <div class="label">The Problem</div>
-  <h1>Scientific evidence is trapped in PDFs</h1>
-  <h2>AI is accelerating output, but our knowledge validation system was built for humans reading documents.</h2>
-  <div class="stat-row">
-    <div class="stat">
-      <div class="num">+17%</div>
-      <div class="desc">Submission growth to Elsevier journals, 2023–2024 <sup style="color:var(--accent)">(1)</sup></div>
-    </div>
-    <div class="stat">
-      <div class="num rust">&gt;95%</div>
-      <div class="desc">Hallucinated references in frontier models for biomedicine <sup style="color:var(--accent)">(2)</sup></div>
-    </div>
-  </div>
-  <div class="source" style="margin-top:3em"><span style="color:var(--accent)">(1)</span> Dimensions (2025) &nbsp;&middot;&nbsp; <span style="color:var(--accent)">(2)</span> Asai et al. 2026, Nature 650, 857–863</div>
-</div>
-
-<!-- ═══ SLIDE 2: THE BOTTLENECK ═══ -->
-<div class="slide" data-chapter="The Problem">
-  <div class="label">The Problem</div>
-  <h1>A missing layer</h1>
-  <ul class="bullet-list">
-    <li>Workflows require repeated manual claim extraction</li>
-    <li>Peer review is slow, expensive, and opaque</li>
-    <li>LLMs hallucinate without grounded retrieval</li>
-    <li>No machine-readable evidence substrate exists</li>
-  </ul>
-</div>
-
-<!-- ═══ SLIDE 3: PURPOSE ═══ -->
-<div class="slide" data-chapter="Our Purpose">
-  <div class="label">Our Purpose</div>
-  <h1 style="max-width:90%;font-size:clamp(24px,3.5vw,44px)">Turn scientific literature into an open, machine-readable claims and evidence layer that humans, AI systems, and institutions can query directly.</h1>
-  <div class="bottom-line">Open scientific infrastructure with both public-good and commercial value</div>
-</div>
-
-<!-- ═══ SLIDE 4: SOLUTION OVERVIEW ═══ -->
-<div class="slide" data-chapter="The Solution">
-  <div class="label">The Solution</div>
-  <h1>From papers to a reusable evidence layer</h1>
-  <div class="pipeline">
-    <div class="pipe-node">Papers</div>
-    <div class="pipe-arrow">→</div>
-    <div class="pipe-node highlight">Claims + Evidence</div>
-    <div class="pipe-arrow">→</div>
-    <div class="pipe-node">API / MCP</div>
-    <div class="pipe-arrow">→</div>
-    <div class="pipe-node">Apps · Researchers · AI Agents · Pharma</div>
-  </div>
-  <div class="bottom-line">The product is the structured evidence layer in the middle</div>
-</div>
-
-<!-- ═══ SLIDE 5: CLAIM RECORD ═══ -->
-<div class="slide" data-chapter="The Solution">
-  <div class="label">The Data Object</div>
-  <h1>What one claim record looks like</h1>
-  <div class="claim-card">
-    <div class="card-label">ClaimRecord</div>
-    <div class="card-claim">SGLT2 inhibitors reduced HbA1c versus placebo in adults with type 2 diabetes at 24 weeks.</div>
-    <div class="card-fields">
-      <div class="field"><div class="fk">Evidence type</div><div class="fv">Randomized controlled trial</div></div>
-      <div class="field"><div class="fk">Effect / N</div><div class="fv">−0.7% HbA1c, n = 1,842</div></div>
-      <div class="field"><div class="fk">Source DOI</div><div class="fv">10.1056/NEJMoa2301…</div></div>
-      <div class="field"><div class="fk">Confidence</div><div class="fv" style="color:var(--accent)">● High</div></div>
-      <div class="field"><div class="fk">Entities</div><div class="fv">SGLT2i, HbA1c, T2D</div></div>
-      <div class="field"><div class="fk">Relations</div><div class="fv">reduces → measured_by</div></div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ SLIDE 6: WHY BITTENSOR ═══ -->
-<div class="slide" data-chapter="Why Bittensor">
-  <div class="label">Why Bittensor</div>
-  <h1>Subnet vs. centralized pipeline</h1>
-  <h2>LLM extraction is probabilistic —<br>aggregating many outputs improves accuracy</h2>
-  <div class="compare">
-    <div class="col dim">
-      <h3>Centralized</h3>
-      <ul>
-        <li>One internal team</li>
-        <li>Few extraction pipelines</li>
-        <li>Outputs vary across runs</li>
-        <li>Repeated adjudication = cost</li>
-        <li>Quality improvement bottlenecked</li>
-      </ul>
-    </div>
-    <div class="col bright">
-      <h3>Claims Subnet</h3>
-      <ul>
-        <li>Many miners, diverse strategies</li>
-        <li>Validators compare &amp; score</li>
-        <li>Competition improves signal</li>
-        <li>Graph improves over time</li>
-        <li>Quality improvement is incentive-aligned</li>
-      </ul>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ SLIDE 7: IMPACT / APPLICATIONS ═══ -->
-<div class="slide" data-chapter="Impact">
-  <div class="label">Impact</div>
-  <h1>Claims accelerates scientific progress</h1>
-  <h2>Claims accelerates scientific progress</h2>
-  <div class="tile-grid">
-    <div class="tile"><span class="tile-icon">🧠</span><span class="tile-title">AI Evidence Memory</span></div>
-    <div class="tile"><span class="tile-icon">🔬</span><span class="tile-title">Grounded Answers</span></div>
-    <div class="tile"><span class="tile-icon">⚡</span><span class="tile-title">Contradiction Tracking</span></div>
-    <div class="tile"><span class="tile-icon">🛡</span><span class="tile-title">AI Evaluation</span></div>
-    <div class="tile"><span class="tile-icon">📋</span><span class="tile-title">Peer Review Tools</span></div>
-    <div class="tile"><span class="tile-icon">📊</span><span class="tile-title">Funder Analytics</span></div>
-  </div>
-  <div class="bottom-line">Claims is a new substrate for evidence-aware applications</div>
-</div>
-
-<!-- ═══ SLIDE 8: MARKET ═══ -->
-<div class="slide" data-chapter="Market">
-  <div class="label">Market</div>
-  <h1>Starting with biomedicine</h1>
-  <h2>The first wedge where evidence quality is commercially expensive</h2>
-  <div class="wedge-layout">
-    <div class="wedge-stack">
-      <div class="wedge-block">Biotech</div>
-      <div class="wedge-block">Medicine</div>
-      <div class="wedge-block">Pharma</div>
-    </div>
-    <div class="wedge-details">
-      <div class="wedge-item">
-        <h4>Early customers</h4>
-        <p>Pharma R&D, biotech, scientific AI builders, evidence-heavy enterprise</p>
+    <!-- ================================================================
+         SLIDE 1 — COVER
+         ================================================================ -->
+    <section class="slide cover active" data-section="—">
+      <div class="hero-art"></div>
+      <div class="overlay"></div>
+      <div class="cover-text">
+        <h1 class="cover-title t-title-xl">Claims</h1>
+        <div class="cover-subtitle">The canonical claim-evidence graph for science.</div>
+        <div class="cover-footer">
+          <div class="cover-tagline">A Bittensor subnet. By the team that built <em>SciWeave</em>.</div>
+        </div>
       </div>
-      <div class="wedge-item">
-        <h4>Product value</h4>
-        <p>Low-latency, auditable, trustworthy claim-level database with provenance</p>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 2 — HERO WITH SUPPORTING TILES
+         AI ate the internet. Science is what it can't digest.
+         ================================================================ -->
+    <section class="slide" data-section="01 · Problem" data-page="02">
+      <h2 class="slide-title t-title">AI ate the internet. Science is what it can't digest.</h2>
+      <div class="content" style="display:flex; flex-direction:column; justify-content:center;">
+        <div class="support-tiles" style="margin-top: 0;">
+          <div class="support-tile">
+            <div class="rule"></div>
+            <div class="num">$3T+</div>
+            <div class="lbl">R&amp;D spending annually<sup style="color: var(--color-claims-blue); font-size: 60%; font-weight: 500;">1</sup></div>
+          </div>
+          <div class="support-tile">
+            <div class="rule"></div>
+            <div class="num">300M+</div>
+            <div class="lbl">scientific articles exist</div>
+          </div>
+          <div class="support-tile copper">
+            <div class="rule"></div>
+            <div class="num">0%</div>
+            <div class="lbl">structured as machine-readable data</div>
+          </div>
+        </div>
       </div>
-      <div class="wedge-item">
-        <h4>Business model</h4>
-        <p>Free low-volume → paid API/MCP → enterprise integrations</p>
+      <div class="ref-strip">
+        <p><sup style="color: var(--color-claims-blue); font-size: 75%; font-weight: 500;">1</sup>&nbsp;World Intellectual Property Organization (WIPO), 2025.</p>
       </div>
-    </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo"><span class="wordmark">Claims</span></div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 3 — HALLUCINATION CHART
+         ================================================================ -->
+    <section class="slide" data-section="01 · Problem" data-page="03">
+      <h2 class="slide-title t-title">Frontier models hallucinate science.</h2>
+      <div class="content" style="display:flex; flex-direction:column; justify-content:flex-start; padding-top: 24px;">
+        <div class="t-subtitle" style="color: var(--color-graphite); margin-bottom: 80px;">
+          Hallucinated references on ScholarQABench<sup style="color: var(--color-claims-blue); font-size: 60%; font-weight: 500;">1,&nbsp;2</sup> — biomedical and neuroscience queries.
+        </div>
+
+        <div style="max-width: 1500px;">
+          <div class="bar-row">
+            <div class="bar-label">Claude Opus 4.6</div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 62%; background: var(--color-ink);"></div>
+              <div class="bar-value" style="left: calc(62% + 24px);">62%</div>
+            </div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">GPT-5.2</div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 59%; background: var(--color-atmosphere);"></div>
+              <div class="bar-value" style="left: calc(59% + 24px);">59%</div>
+            </div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label"><em>SciWeave</em></div>
+            <div class="bar-track">
+              <div class="bar-fill" style="left: -4px; width: 8px; background: var(--color-copper);"></div>
+              <div class="bar-value" style="left: 24px; color: var(--color-copper);">0%</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="font: 300 28px/1.35 var(--font-family); color: var(--color-graphite); margin-top: 80px; max-width: 1500px;">
+          RAG eliminates fake citations. It still only parrots what authors said.
+        </div>
+      </div>
+      <div class="ref-strip">
+        <p><sup style="color: var(--color-claims-blue); font-size: 75%; font-weight: 500;">1</sup>&nbsp;Asai et al., 2026. Synthesizing scientific literature with retrieval-augmented language models, <em>Nature</em> (650), 857&ndash;863. <a href="https://doi.org/10.1038/s41586-025-10072-4" style="color: var(--color-claims-blue); text-decoration: underline;">https://doi.org/10.1038/s41586-025-10072-4</a></p>
+        <p style="margin-top: 8px;"><sup style="color: var(--color-claims-blue); font-size: 75%; font-weight: 500;">2</sup>&nbsp;DeSci Labs, 2026. Zero hallucinated citations: SciWeave's ScholarQABench results. <a href="https://www.desci.com/blog/zero-hallucinated-citations-sciweaves-scholarqabench-results" style="color: var(--color-claims-blue); text-decoration: underline;">https://www.desci.com/blog/zero-hallucinated-citations-sciweaves-scholarqabench-results</a></p>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo"><span class="wordmark">Claims</span></div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 4 — PURPOSE / NEGATIVE SPACE
+         ================================================================ -->
+    <section class="slide" data-section="01 · Purpose" data-page="04">
+      <h2 class="slide-title t-title">Our Purpose.</h2>
+      <div class="content">
+        <div class="purpose-grid">
+          <div>
+            <h3 class="t-title" style="color: var(--color-ink); margin-bottom: 32px; font-weight: 300;">
+              We build the substrate<br>that makes the negative space of science<br>computable.
+            </h3>
+            <div style="font: 400 32px/1.4 var(--font-family); color: var(--color-graphite); max-width: 720px;">
+              Scientific AI needs structure,<br>not just scale.
+            </div>
+          </div>
+          <div style="position: relative; height: 600px;">
+            <svg viewBox="0 0 800 600" style="width:100%; height:100%;" preserveAspectRatio="xMidYMid meet">
+              <!-- Sparse network with negative space -->
+              <!-- Edges -->
+              <line x1="140" y1="120" x2="280" y2="200" stroke="#0B1220" stroke-width="1"/>
+              <line x1="280" y1="200" x2="420" y2="140" stroke="#0B1220" stroke-width="1"/>
+              <line x1="280" y1="200" x2="380" y2="340" stroke="#0B1220" stroke-width="1"/>
+              <line x1="420" y1="140" x2="560" y2="240" stroke="#0B1220" stroke-width="1"/>
+              <line x1="380" y1="340" x2="560" y2="240" stroke="#0B1220" stroke-width="1"/>
+              <line x1="560" y1="240" x2="680" y2="160" stroke="#0B1220" stroke-width="1"/>
+              <line x1="380" y1="340" x2="520" y2="440" stroke="#0B1220" stroke-width="1"/>
+              <line x1="200" y1="380" x2="380" y2="340" stroke="#0B1220" stroke-width="1"/>
+              <line x1="520" y1="440" x2="680" y2="480" stroke="#0B1220" stroke-width="1"/>
+
+              <!-- Contradicting edge (copper dashed) -->
+              <line x1="420" y1="140" x2="380" y2="340" stroke="#B87333" stroke-width="2" stroke-dasharray="6 6"/>
+
+              <!-- Broken edges to negative space -->
+              <line x1="560" y1="240" x2="700" y2="380" stroke="#B87333" stroke-width="1" stroke-dasharray="3 5" opacity="0.7"/>
+              <line x1="200" y1="380" x2="120" y2="500" stroke="#B87333" stroke-width="1" stroke-dasharray="3 5" opacity="0.7"/>
+
+              <!-- Filled nodes (existing knowledge) -->
+              <circle cx="140" cy="120" r="11" fill="#0B1220"/>
+              <circle cx="280" cy="200" r="13" fill="#0B1220"/>
+              <circle cx="420" cy="140" r="11" fill="#0B1220"/>
+              <circle cx="380" cy="340" r="14" fill="#0B1220"/>
+              <circle cx="560" cy="240" r="12" fill="#0B1220"/>
+              <circle cx="680" cy="160" r="10" fill="#0B1220"/>
+              <circle cx="200" cy="380" r="11" fill="#0B1220"/>
+              <circle cx="520" cy="440" r="11" fill="#0B1220"/>
+              <circle cx="680" cy="480" r="10" fill="#0B1220"/>
+
+              <!-- Outlined-only nodes (missing claims / negative space) -->
+              <circle cx="700" cy="380" r="11" fill="none" stroke="#B87333" stroke-width="1.5" stroke-dasharray="3 3"/>
+              <circle cx="120" cy="500" r="10" fill="none" stroke="#B87333" stroke-width="1.5" stroke-dasharray="3 3"/>
+              <circle cx="300" cy="520" r="11" fill="none" stroke="#B87333" stroke-width="1.5" stroke-dasharray="3 3"/>
+              <circle cx="600" cy="540" r="10" fill="none" stroke="#B87333" stroke-width="1.5" stroke-dasharray="3 3"/>
+
+              <!-- Label for the contradiction -->
+              <text x="430" y="245" fill="#B87333" font-family="Inter" font-size="13" font-style="italic" letter-spacing="0.06em">contradicts</text>
+
+              <!-- Label for negative space region -->
+              <text x="180" y="555" fill="#B87333" font-family="Inter" font-size="13" font-style="italic" letter-spacing="0.06em">negative space</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo"><span class="wordmark">Claims</span></div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 5 — TEAM
+         ================================================================ -->
+    <section class="slide" data-section="02 · Team" data-page="05">
+      <h2 class="slide-title t-title">The team.</h2>
+      <div class="content" style="display:flex; align-items:flex-start;">
+        <div class="team-grid">
+
+          <div class="team-col">
+            <div class="portrait"><img src="Logos and pictures/philipp.jpg" alt="Dr. Philipp Koellinger"></div>
+            <div class="team-name">Dr. Philipp Koellinger</div>
+            <div class="team-role">
+              CEO, DeSci Labs / <em>SciWeave</em>
+              <span class="role-2">Professor of Economics</span>
+            </div>
+            <div class="team-headline">
+              Led 300+ scientists in a GWAS consortium that fixed replication in behavioral genetics, building the data standard of that field. Published in <em>Nature</em> and <em>Science</em>.
+            </div>
+            <div class="logo-rows">
+              <div class="logo-row">
+                <img src="Logos and pictures/desci-labs.svg" alt="DeSci Labs">
+                <img src="Logos and pictures/vu-amsterdam.png" alt="VU Amsterdam">
+                <img src="Logos and pictures/uw-madison.svg" alt="UW–Madison">
+              </div>
+              <div class="logo-row">
+                <img src="Logos and pictures/science-aaas.svg" alt="Science / AAAS">
+                <img src="Logos and pictures/nature.svg" alt="Nature">
+              </div>
+            </div>
+          </div>
+
+          <div class="team-col">
+            <div class="portrait"><img src="Logos and pictures/sina.jpg" alt="Sina Iman"></div>
+            <div class="team-name">Sina Iman</div>
+            <div class="team-role">
+              CTO, DeSci Labs / <em>SciWeave</em>
+            </div>
+            <div class="team-headline">
+              ML, blockchain, cryptography. Early Palantir engineer.
+            </div>
+            <div class="logo-rows">
+              <div class="logo-row">
+                <img src="Logos and pictures/desci-labs.svg" alt="DeSci Labs">
+                <img src="Logos and pictures/palantir.svg" alt="Palantir">
+              </div>
+              <div class="logo-row">
+                <img src="Logos and pictures/booz-allen-hamilton.svg" alt="Booz Allen Hamilton">
+                <img src="Logos and pictures/nsa-seal.svg" alt="NSA">
+              </div>
+            </div>
+          </div>
+
+          <div class="team-col">
+            <div class="portrait"><img src="Logos and pictures/christian.jpg" alt="Dr. Christian Roessler"></div>
+            <div class="team-name">Dr. Christian Roessler</div>
+            <div class="team-role">
+              Professor of Economics
+            </div>
+            <div class="team-headline">
+              Game theory and mechanism design.<br>Generally optimal incentives<br>for Bittensor subnets.
+            </div>
+            <div class="logo-rows">
+              <div class="logo-row">
+                <img src="Logos and pictures/university-of-melbourne.svg" alt="U. Melbourne">
+                <img src="Logos and pictures/brown-university.svg" alt="Brown">
+                <img src="Logos and pictures/rice-university.svg" alt="Rice">
+              </div>
+              <div class="logo-row">
+                <img src="Logos and pictures/university-of-vienna.svg" alt="U. Vienna">
+                <img src="Logos and pictures/california-state-university.svg" alt="Cal State">
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo"><span class="wordmark">Claims</span></div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 6 — MEET SIMON (Display quote)
+         ================================================================ -->
+    <section class="slide" data-section="03 · The Buyer" data-page="06">
+      <h2 class="slide-title t-title">Meet Simon.</h2>
+      <div class="content" style="display:flex; flex-direction:column; justify-content:center;">
+        <div class="quote-display">
+          <div class="qmark">&ldquo;</div>
+          <div class="qbody">
+            Through which mechanisms does <em>5-MeO-DMT</em><br>
+            affect mental health outcomes?
+          </div>
+        </div>
+        <div class="quote-context">
+          Well-funded biotech startup. Thousands of papers to find and review.<br>
+          An FDA-relevant decision. Failing to vibe-code an AI research workflow himself.<br>
+          Willing to pay us for a pilot. Two additional pilot customers in line.
+        </div>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo"><span class="wordmark">Claims</span></div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 7 — MARKET (Metric tile composition)
+         ================================================================ -->
+    <section class="slide" data-section="04 · Market" data-page="07">
+      <h2 class="slide-title t-title">Market.</h2>
+      <div class="content" style="display:flex; flex-direction:column; justify-content:center;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+
+          <div class="tile" style="flex: 0 0 auto;">
+            <div class="tile-top"><div class="tile-rule"></div></div>
+            <div class="tile-numeral">$20–50B</div>
+            <div class="tile-label">R&amp;D intelligence and evidence work</div>
+            <div class="tile-delta pos">+5% / yr &middot; R&amp;D spending growth &middot; OECD</div>
+          </div>
+
+          <div class="claims-hub">
+            <div class="tile-top">
+              <svg width="300" height="80" viewBox="0 0 300 80">
+                <!-- Left arrow flowing in toward the polyhedron, line at the same y as the tile rules -->
+                <line x1="10" y1="40" x2="106" y2="40" stroke="#2D4F8E" stroke-width="2.5"/>
+                <polygon points="116,40 104,33 104,47" fill="#2D4F8E"/>
+
+                <!-- Center polyhedron — callback to cover artwork, sitting at the rule-line y -->
+                <g transform="translate(150, 40)">
+                  <polygon points="0,-26 22,-13 22,13 0,26 -22,13 -22,-13" fill="#0B1220"/>
+                  <line x1="0" y1="-26" x2="0" y2="26" stroke="#4A5160" stroke-width="0.6"/>
+                  <line x1="-22" y1="-13" x2="22" y2="13" stroke="#4A5160" stroke-width="0.6"/>
+                  <line x1="-22" y1="13" x2="22" y2="-13" stroke="#4A5160" stroke-width="0.6"/>
+                  <circle cx="0" cy="0" r="2" fill="#FFFFFF" opacity="0.5"/>
+                </g>
+
+                <!-- Right arrow flowing in toward the polyhedron -->
+                <line x1="194" y1="40" x2="290" y2="40" stroke="#2D4F8E" stroke-width="2.5"/>
+                <polygon points="184,40 196,33 196,47" fill="#2D4F8E"/>
+              </svg>
+            </div>
+            <div class="hub-wordmark">Claims</div>
+          </div>
+
+          <div class="tile" style="flex: 0 0 auto;">
+            <div class="tile-top"><div class="tile-rule"></div></div>
+            <div class="tile-numeral">$5–9B</div>
+            <div class="tile-label">AI training data for scientific models</div>
+            <div class="tile-delta copper">+100% / yr</div>
+          </div>
+        </div>
+      </div>
+      <div class="ref-strip">
+        <p>WIPO 2025 · Labelbox (Cognitive Revolution, Jul 2025) · Sacra (Surge AI, Scale AI) · TechCrunch (Mercor, Oct 2025).</p>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo"><span class="wordmark">Claims</span></div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 8 — COMPUTABLE CONFIDENCE
+         ================================================================ -->
+    <section class="slide" data-section="05 · Unique Signal" data-page="08">
+      <h2 class="slide-title t-title">Computable confidence — the missing layer.</h2>
+      <div class="content" style="display:flex; flex-direction:column; justify-content:center; padding-bottom: 160px;">
+
+        <div style="margin-bottom: var(--space-4xl);">
+          <h3 style="font: 300 56px/1.15 var(--font-family); color: var(--color-ink); letter-spacing: -0.005em;">
+            Extraction uncertainty.
+          </h3>
+          <div style="font: 400 32px/1.4 var(--font-family); color: var(--color-graphite); margin-top: var(--space-md);">
+            Many extractors. Calibrated against gold data.
+          </div>
+        </div>
+
+        <div>
+          <h3 style="font: 300 56px/1.15 var(--font-family); color: var(--color-ink); letter-spacing: -0.005em;">
+            Source uncertainty.
+          </h3>
+          <div style="font: 400 32px/1.4 var(--font-family); color: var(--color-graphite); margin-top: var(--space-md);">
+            Replication, p-hacking, file drawer.<sup style="color: var(--color-claims-blue); font-size: 60%; font-weight: 500;">1&ndash;4</sup>
+          </div>
+        </div>
+
+      </div>
+      <div class="ref-strip">
+        <p><sup style="color: var(--color-claims-blue); font-size: 75%; font-weight: 500;">1</sup>&nbsp;Open Science Collaboration (2015): Estimating the reproducibility of psychological science. <em>Science</em> 349(6251). <a href="https://www.science.org/doi/10.1126/science.aac4716" style="color: var(--color-claims-blue); text-decoration: underline;">https://www.science.org/doi/10.1126/science.aac4716</a></p>
+        <p style="margin-top: 8px;"><sup style="color: var(--color-claims-blue); font-size: 75%; font-weight: 500;">2</sup>&nbsp;Prinz et al. (2011): Believe it or not: how much can we rely on published data on potential drug targets? <em>Nature Reviews Drug Discovery</em> 10(712). <a href="https://www.nature.com/articles/nrd3439-c1" style="color: var(--color-claims-blue); text-decoration: underline;">https://www.nature.com/articles/nrd3439-c1</a></p>
+        <p style="margin-top: 8px;"><sup style="color: var(--color-claims-blue); font-size: 75%; font-weight: 500;">3</sup>&nbsp;Baker (2016): Biotech giant publishes failures to confirm high-profile science. <em>Nature</em> 530(141). <a href="https://www.nature.com/articles/nature.2016.19269" style="color: var(--color-claims-blue); text-decoration: underline;">https://www.nature.com/articles/nature.2016.19269</a></p>
+        <p style="margin-top: 8px;"><sup style="color: var(--color-claims-blue); font-size: 75%; font-weight: 500;">4</sup>&nbsp;Ioannidis (2005): Why most published research findings are false. <em>PLoS Medicine</em> 19(8), e1004085. <a href="https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124" style="color: var(--color-claims-blue); text-decoration: underline;">https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124</a></p>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo"><span class="wordmark">Claims</span></div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 9 — THE PRODUCT (Bowtie architecture · Centerpiece)
+         ================================================================ -->
+    <section class="slide" data-section="06 · Product" data-page="09">
+      <h2 class="slide-title t-title">The Product.</h2>
+
+      <div class="content" style="top: 200px; bottom: 80px; display: flex; flex-direction: column; justify-content: space-evenly;">
+
+        <!-- Bowtie / hourglass architecture: many miners → one canonical DB → many ontologies -->
+        <svg viewBox="0 0 1600 480" style="width: 100%; height: auto; display: block;" preserveAspectRatio="xMidYMid meet">
+
+          <!-- LAYER 3 EYEBROW — Enterprise · Subnet owners · Palantir-Foundry pattern for science -->
+          <text x="0" y="18" fill="#4A5160" font-family="Inter" font-weight="500" font-size="14" letter-spacing="0.14em" style="text-transform: uppercase;">Enterprise &middot; Subnet owners &middot; Palantir-Foundry pattern for science</text>
+
+          <!-- Top ontology endpoints: label ABOVE dot (line terminates at the dot, label sits above with padding).
+               Labels shifted down from y=58 to y=80 to widen the gap between the enterprise eyebrow and the label row. -->
+          <g font-family="Inter">
+            <text x="300" y="80" text-anchor="middle" fill="#0B1220" font-weight="500" font-size="22">Drug discovery</text>
+            <circle cx="300" cy="104" r="6" fill="#2D4F8E"/>
+
+            <text x="800" y="80" text-anchor="middle" fill="#0B1220" font-weight="500" font-size="22">Defense R&amp;D</text>
+            <circle cx="800" cy="104" r="6" fill="#2D4F8E"/>
+
+            <text x="1300" y="80" text-anchor="middle" fill="#0B1220" font-weight="500" font-size="22">Regulatory dossiers</text>
+            <circle cx="1300" cy="104" r="6" fill="#2D4F8E"/>
+          </g>
+
+          <!-- Diverging lines from canonical DB band UP to each ontology endpoint (terminate at the dot) -->
+          <g stroke="#2D4F8E" stroke-width="1.5" fill="none">
+            <line x1="540" y1="200" x2="300" y2="110"/>
+            <line x1="800" y1="200" x2="800" y2="110"/>
+            <line x1="1060" y1="200" x2="1300" y2="110"/>
+          </g>
+
+          <!-- LAYER 2 EYEBROW — Validators (left) -->
+          <text x="0" y="237" fill="#4A5160" font-family="Inter" font-weight="500" font-size="14" letter-spacing="0.14em" style="text-transform: uppercase;">Validators</text>
+
+          <!-- Middle band: consolidated database -->
+          <rect x="480" y="200" width="640" height="60" fill="#F7F5F0" stroke="#0B1220" stroke-width="1.5" rx="4"/>
+          <text x="800" y="240" text-anchor="middle" fill="#0B1220" font-family="Inter" font-weight="500" font-size="20">Canonical claim-evidence database</text>
+
+          <!-- API · MCP access tag to the right of the band -->
+          <text x="1140" y="237" fill="#0B1220" font-family="Inter" font-weight="500" font-size="14" letter-spacing="0.14em" style="text-transform: uppercase;">API &middot; MCP</text>
+
+          <!-- Converging lines from miner dots UP to the canonical DB band -->
+          <g stroke="#B5BAC4" stroke-width="1" fill="none">
+            <line x1="80"   y1="430" x2="480"  y2="260"/>
+            <line x1="211"  y1="430" x2="538"  y2="260"/>
+            <line x1="342"  y1="430" x2="596"  y2="260"/>
+            <line x1="473"  y1="430" x2="654"  y2="260"/>
+            <line x1="605"  y1="430" x2="712"  y2="260"/>
+            <line x1="736"  y1="430" x2="770"  y2="260"/>
+            <line x1="867"  y1="430" x2="828"  y2="260"/>
+            <line x1="998"  y1="430" x2="886"  y2="260"/>
+            <line x1="1129" y1="430" x2="944"  y2="260"/>
+            <line x1="1260" y1="430" x2="1002" y2="260"/>
+            <line x1="1391" y1="430" x2="1060" y2="260"/>
+            <line x1="1520" y1="430" x2="1120" y2="260"/>
+          </g>
+
+          <!-- LAYER 1 — Miner claim-evidence streams (bottom) -->
+          <g fill="#0B1220">
+            <circle cx="80"   cy="430" r="5"/>
+            <circle cx="211"  cy="430" r="5"/>
+            <circle cx="342"  cy="430" r="5"/>
+            <circle cx="473"  cy="430" r="5"/>
+            <circle cx="605"  cy="430" r="5"/>
+            <circle cx="736"  cy="430" r="5"/>
+            <circle cx="867"  cy="430" r="5"/>
+            <circle cx="998"  cy="430" r="5"/>
+            <circle cx="1129" cy="430" r="5"/>
+            <circle cx="1260" cy="430" r="5"/>
+            <circle cx="1391" cy="430" r="5"/>
+            <circle cx="1520" cy="430" r="5"/>
+          </g>
+
+          <text x="0" y="470" fill="#4A5160" font-family="Inter" font-weight="500" font-size="14" letter-spacing="0.14em" style="text-transform: uppercase;">Miner streams</text>
+
+        </svg>
+
+        <!-- Answer for Simon: concrete output the architecture produces. Pushed to the bottom of the content area via justify-content: space-between on the parent. -->
+        <div>
+          <div style="font: 500 14px/1 var(--font-family); letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-claims-blue); margin-bottom: 12px;">Answer for Simon</div>
+          <div style="font: 400 italic 28px/1.35 var(--font-family); color: var(--color-ink); max-width: 1500px;">
+            <em>5-MeO-DMT</em> has an 80% probability to reduce depressive symptoms for &gt;3 months after a single dose.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo"><span class="wordmark">Claims</span></div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 10 — WHY BITTENSOR
+         ================================================================ -->
+    <section class="slide" data-section="07 · Why Bittensor" data-page="10">
+      <h2 class="slide-title t-title">Why Bittensor.</h2>
+      <div class="content" style="display:flex; flex-direction:column; justify-content:center; padding-bottom: 130px;">
+        <ul class="bittensor-list">
+          <li>
+            <div class="head">
+              <span class="rule"></span>
+              <span class="copy">
+                <strong>Sharper signal.</strong>
+                <span class="sub">Extractor diversity → calibrated confidence per claim.</span>
+              </span>
+            </div>
+          </li>
+          <li>
+            <div class="head">
+              <span class="rule"></span>
+              <span class="copy">
+                <strong>Capital efficiency.</strong>
+                <span class="sub">Token-funded vs. centrally-funded data curation.</span>
+              </span>
+            </div>
+          </li>
+          <li>
+            <div class="head">
+              <span class="rule"></span>
+              <span class="copy">
+                <strong>Open competition compounds quality.</strong>
+                <span class="sub">Incentive design.</span>
+              </span>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="takeaway" style="text-align: left; bottom: 200px;">
+        Data quality is the only thing that matters. Bittensor is where it compounds.
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo"><span class="wordmark">Claims</span></div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 11 — BUSINESS MODEL + MOAT
+         ================================================================ -->
+    <section class="slide" data-section="08 · Business Model" data-page="11">
+      <h2 class="slide-title t-title">How we monetize. How we keep it.</h2>
+      <div class="content" style="display:flex; flex-direction:column; justify-content:flex-start; padding-top: 100px;">
+        <div class="bm-grid">
+          <div>
+            <div class="bm-col-head" style="color: var(--color-graphite);">Revenue · Three Tiers</div>
+            <div class="revenue-stack">
+              <div class="revenue-block b1"><strong>Free.</strong> Researchers, students. Discovery channel.</div>
+              <div class="revenue-block b2"><strong>Metered API / MCP.</strong> AI companies and R&amp;D teams.</div>
+              <div class="revenue-block b3"><strong>Enterprise.</strong> Custom ontology. Pharma · biotech · defense.</div>
+            </div>
+          </div>
+          <div class="bm-divider"></div>
+          <div>
+            <div class="bm-col-head" style="color: var(--color-claims-blue);">Moat · Three Layers</div>
+            <div class="moat-stack">
+              <div class="moat-layer l3"><strong>Ontologies.</strong> Switching cost &middot; data-network effect.</div>
+              <div class="moat-layer l2"><strong>Data quality.</strong> Miners and validators compete continuously.</div>
+              <div class="moat-layer l1"><strong>Uncertainty as signal.</strong> Diverse extractors + gold-data.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="takeaway" style="bottom: 220px;">
+        Layers 1 and 2 compound automatically. Layer 3 is built one enterprise at a time.
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo"><span class="wordmark">Claims</span></div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 12 — ROADMAP
+         ================================================================ -->
+    <section class="slide" data-section="09 · Roadmap" data-page="12">
+      <h2 class="slide-title t-title">Roadmap.</h2>
+      <div class="content" style="position: relative;">
+        <div class="roadmap-wrap">
+          <!-- Time axis -->
+          <div class="roadmap-axis-line"></div>
+          <div class="roadmap-tick" style="left: 16%;"><div class="lbl">Q2 26</div></div>
+          <div class="roadmap-tick" style="left: 44%;"><div class="lbl">Q3 26 — Q4 26</div></div>
+          <div class="roadmap-tick" style="left: 76%;"><div class="lbl">2027+</div></div>
+
+          <!-- Phase columns -->
+          <div class="phase-cols">
+            <div class="phase-col">
+              <h3>Centralized prototype</h3>
+              <ul>
+                <li>Build customer solution in-house</li>
+                <li>First paid R&amp;D pilot.</li>
+                <li>Beat client's internal baseline</li>
+              </ul>
+              <span class="phase-gate">Signed pilot + benchmark win</span>
+            </div>
+            <div class="phase-col">
+              <h3>Subnet launch</h3>
+              <ul>
+                <li>Register Claims subnet on Bittensor</li>
+                <li>Open-source miner &amp; validator reference</li>
+                <li>API + MCP integrations</li>
+              </ul>
+              <span class="phase-gate">50+ miners &middot; 1M+ claims &middot; first external API</span>
+            </div>
+            <div class="phase-col">
+              <h3>Platform</h3>
+              <ul>
+                <li>Scale beyond biomedicine</li>
+                <li>Customer-specific ontologies</li>
+                <li>Token buyback-and-burn live</li>
+              </ul>
+              <span class="phase-gate">Revenue + customer milestones</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo"><span class="wordmark">Claims</span></div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 13 — CLOSING
+         ================================================================ -->
+    <section class="slide closing" data-section="—">
+      <div class="hero-art"></div>
+      <div class="overlay"></div>
+      <div class="closing-text">
+        <h1 class="closing-headline">Let&rsquo;s talk.</h1>
+        <div class="closing-name">Prof. Dr. Philipp Koellinger</div>
+        <div class="closing-email">philipp@desci.com</div>
+      </div>
+    </section>
+
   </div>
 </div>
 
-<!-- ═══ SLIDE 9: MECHANISM ═══ -->
-<div class="slide" data-chapter="Mechanism">
-  <div class="label">Mechanism</div>
-  <h1>Two-sided incentive design</h1>
-  <h2>Miners compete on quality<br>Validators compete on judgment</h2>
-  <div class="mech-flow">
-    <div class="mech-node">
-      <div class="mn-box"><div class="mn-title">Many Miners</div></div>
-      <div class="mn-chip">Different models, prompts, domain strategies</div>
-      <div class="mn-chip" style="margin-top:4px">Rewarded for quality + valid novelty</div>
-    </div>
-    <div class="mech-arrow">→</div>
-    <div class="mech-node">
-      <div class="mn-box accent-border"><div class="mn-title">Validators</div></div>
-      <div class="mn-chip">Compare · Calibrate · Adjudicate</div>
-      <div class="mn-chip" style="margin-top:4px">Best judges attract trust &amp; stake</div>
-    </div>
-    <div class="mech-arrow">→</div>
-    <div class="mech-node">
-      <div class="mn-box"><div class="mn-title">Canonical Graph</div></div>
-      <div class="mn-chip">Best version becomes canonical</div>
-      <div class="mn-chip" style="margin-top:4px">Hard cases improve reference quality</div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ SLIDE 10: STRATEGIC VALUE ═══ -->
-<div class="slide" data-chapter="Strategic Value">
-  <div class="label">Strategic Value</div>
-  <h1>A flagship subnet for real-world utility</h1>
-  <div class="hub-container">
-    <svg class="hub-svg" viewBox="0 0 700 360" xmlns="http://www.w3.org/2000/svg">
-      <!-- Lines from center to spokes -->
-      <line class="hub-line-svg" x1="350" y1="180" x2="350" y2="28"/>
-      <line class="hub-line-svg" x1="350" y1="180" x2="600" y2="68"/>
-      <line class="hub-line-svg" x1="350" y1="180" x2="600" y2="280"/>
-      <line class="hub-line-svg" x1="350" y1="180" x2="350" y2="340"/>
-      <line class="hub-line-svg" x1="350" y1="180" x2="100" y2="280"/>
-      <line class="hub-line-svg" x1="350" y1="180" x2="100" y2="68"/>
-      <!-- Center circle -->
-      <circle class="hub-circle" cx="350" cy="180" r="48"/>
-      <text class="hub-center-text" x="350" y="175" text-anchor="middle">Claims</text>
-      <text class="hub-center-text" x="350" y="193" text-anchor="middle">Subnet</text>
-      <!-- Spoke boxes -->
-      <rect class="spoke-bg" x="285" y="4" width="130" height="32"/>
-      <text class="hub-label" x="350" y="25" text-anchor="middle">Scientific Credibility</text>
-      <rect class="spoke-bg" x="535" y="52" width="130" height="32"/>
-      <text class="hub-label" x="600" y="73" text-anchor="middle">Enterprise Relevance</text>
-      <rect class="spoke-bg" x="535" y="264" width="130" height="32"/>
-      <text class="hub-label" x="600" y="285" text-anchor="middle">Funder Narrative</text>
-      <rect class="spoke-bg" x="280" y="324" width="140" height="32"/>
-      <text class="hub-label" x="350" y="345" text-anchor="middle">Ecosystem Expansion</text>
-      <rect class="spoke-bg" x="22" y="264" width="156" height="32"/>
-      <text class="hub-label" x="100" y="285" text-anchor="middle">Decentralized Knowledge</text>
-      <rect class="spoke-bg" x="30" y="52" width="140" height="32"/>
-      <text class="hub-label" x="100" y="73" text-anchor="middle">AI Infrastructure</text>
-    </svg>
-  </div>
-</div>
-
-<!-- ═══ SLIDE 11: THE ASK ═══ -->
-<div class="slide" data-chapter="The Ask">
-  <div class="label">The Ask</div>
-  <h1>Help us launch this</h1>
-  <h2>We're looking for support that reduces launch friction</h2>
-  <div class="three-col">
-    <div class="tc">
-      <h3>What We Need</h3>
-      <ul>
-        <li>Reduced registration friction</li>
-        <li>Mechanism design feedback</li>
-        <li>Validator &amp; miner visibility</li>
-      </ul>
-    </div>
-    <div class="tc">
-      <h3>Why Now</h3>
-      <ul>
-        <li>Open knowledge graph is missing</li>
-        <li>AI makes this more urgent and feasible</li>
-        <li>All necessary inputs exist</li>
-      </ul>
-    </div>
-    <div class="tc">
-      <h3>Next Milestones</h3>
-      <ul>
-        <li>Finalize validation design</li>
-        <li>Secure early funding</li>
-        <li>Build biomedical demo</li>
-        <li>Benchmark quality</li>
-        <li>Prepare subnet launch</li>
-      </ul>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ SLIDE 12: CLOSING ═══ -->
-<div class="slide title-slide" data-chapter="The Ask">
-  <div class="label">Claims Subnet</div>
-  <div class="title-big" style="font-size:clamp(28px,4.5vw,56px);line-height:1.25;max-width:80%">
-    If Bittensor is going to power knowledge networks that matter, science is the highest-value place to prove it<span class="accent">.</span>
-  </div>
-  <div class="title-sub" style="margin-top:2em;color:var(--fg-muted)">Claims is an attempt to build that proof.</div>
-</div>
-
-</div><!-- /presentation -->
+<!-- ====================================================================
+     NAV CHROME
+     ==================================================================== -->
+<nav class="nav" id="nav">
+  <button id="prev" title="Previous (←)">&larr;</button>
+  <span class="counter" id="counter">01 / 13</span>
+  <button id="next" title="Next (→ / space)">&rarr;</button>
+  <button class="fs-btn" id="fs" title="Fullscreen (F)">⛶</button>
+</nav>
 
 <script>
-(function(){
-  const slides = document.querySelectorAll('.slide');
-  const counter = document.getElementById('slide-counter');
-  const progress = document.getElementById('progress');
-  const chapNav = document.getElementById('chapter-nav');
-  let current = 0;
-  const total = slides.length;
+(function () {
+  const stage   = document.getElementById('stage');
+  const slides  = Array.from(stage.querySelectorAll('.slide'));
+  const total   = slides.length;
+  const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  const fsBtn   = document.getElementById('fs');
+  let idx = 0;
 
-  // Build chapter nav
-  const chapters = [];
-  const chapterMap = {}; // chapter name -> first slide index
-  slides.forEach((s,i) => {
-    const ch = s.dataset.chapter;
-    if(ch && !chapterMap.hasOwnProperty(ch)){
-      chapterMap[ch] = i;
-      chapters.push(ch);
+  const pad2 = n => n.toString().padStart(2, '0');
+
+  // Populate per-slide footer (section tab + page numeral) from data-attrs
+  slides.forEach((s, i) => {
+    const tab  = s.querySelector('.footer-tab');
+    const page = s.querySelector('.footer-page');
+    if (tab && s.dataset.section && s.dataset.section !== '—') {
+      tab.textContent = s.dataset.section.toUpperCase();
+    }
+    if (page) {
+      page.textContent = pad2(i + 1) + ' / ' + pad2(total);
     }
   });
 
-  chapters.forEach(ch => {
-    const el = document.createElement('div');
-    el.className = 'ch';
-    el.textContent = ch;
-    el.addEventListener('click', () => goTo(chapterMap[ch]));
-    chapNav.appendChild(el);
-  });
-
-  function updateChapterNav(){
-    const currentChapter = slides[current].dataset.chapter;
-    const chEls = chapNav.querySelectorAll('.ch');
-    chEls.forEach(el => {
-      el.classList.remove('active','visited');
-      const elCh = el.textContent;
-      if(elCh === currentChapter) el.classList.add('active');
-      else if(chapterMap[elCh] < current) el.classList.add('visited');
-    });
+  function show(n) {
+    idx = (n + total) % total;
+    slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+    counter.textContent = pad2(idx + 1) + ' / ' + pad2(total);
+    history.replaceState(null, '', '#' + (idx + 1));
   }
 
-  function goTo(idx){
-    if(idx < 0 || idx >= total) return;
-    slides[current].classList.remove('active');
-    current = idx;
-    slides[current].classList.add('active');
-    counter.textContent = (current + 1) + ' / ' + total;
-    progress.style.width = ((current / (total - 1)) * 100) + '%';
-    updateChapterNav();
+  function fit() {
+    const wrap = stage.parentElement;
+    const sx = wrap.clientWidth  / 1920;
+    const sy = wrap.clientHeight / 1080;
+    const scale = Math.min(sx, sy);
+    stage.style.transform = `scale(${scale})`;
   }
+  window.addEventListener('resize', fit);
+  fit();
 
-  function next(){ goTo(Math.min(current + 1, total - 1)) }
-  function prev(){ goTo(Math.max(current - 1, 0)) }
-
-  // Keyboard
   document.addEventListener('keydown', e => {
-    if(e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown'){e.preventDefault(); next()}
-    if(e.key === 'ArrowLeft' || e.key === 'Backspace' || e.key === 'ArrowUp'){e.preventDefault(); prev()}
-  });
-
-  // Touch / Click
-  let touchX = 0;
-  document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX }, {passive:true});
-  document.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - touchX;
-    if(Math.abs(dx) > 40){
-      if(dx < 0) next(); else prev();
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+      e.preventDefault(); show(idx + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault(); show(idx - 1);
+    } else if (e.key === 'Home') {
+      e.preventDefault(); show(0);
+    } else if (e.key === 'End') {
+      e.preventDefault(); show(total - 1);
+    } else if (e.key === 'f' || e.key === 'F') {
+      toggleFs();
+    } else if (e.key === 'Escape') {
+      if (document.fullscreenElement) document.exitFullscreen();
     }
-  }, {passive:true});
-
-  document.addEventListener('click', e => {
-    // Ignore clicks on chapter nav
-    if(e.target.closest('#chapter-nav')) return;
-    const x = e.clientX / window.innerWidth;
-    if(x > 0.65) next();
-    else if(x < 0.35) prev();
   });
 
-  // Init
-  goTo(0);
+  prevBtn.addEventListener('click', e => { e.stopPropagation(); show(idx - 1); });
+  nextBtn.addEventListener('click', e => { e.stopPropagation(); show(idx + 1); });
+
+  function toggleFs() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  }
+  fsBtn.addEventListener('click', e => { e.stopPropagation(); toggleFs(); });
+
+  const initial = parseInt(location.hash.replace('#',''), 10);
+  if (!isNaN(initial) && initial >= 1 && initial <= total) {
+    show(initial - 1);
+  } else {
+    show(0);
+  }
+
+  // Click on left/right halves of slide to navigate (presentation-friendly)
+  stage.addEventListener('click', e => {
+    if (e.target.closest('.nav')) return;
+    const rect = stage.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    if (x > rect.width / 2) show(idx + 1); else show(idx - 1);
+  });
 })();
 </script>
+
 </body>
 </html>
