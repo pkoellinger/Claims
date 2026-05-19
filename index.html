@@ -946,6 +946,33 @@ em { font-style: italic; font-weight: inherit; }
 .takeaway strong { font-weight: 400; color: var(--color-ink); }
 
 /* ======================================================================
+   MOBILE — Portrait phone (≤ 600px CSS width): rotate the stage-wrap 90°.
+   The deck is designed at 1920×1080 (16:9 landscape). On a phone held in
+   portrait, fitting that landscape canvas to the narrow phone width gives
+   an unreadable ~18% scale. Rotating the wrap so its long axis aligns with
+   the phone's long axis allows the JS fit() to scale against the rotated
+   dimensions, producing ~33% scale — text becomes readable. The user
+   either tilts the phone to landscape (orientation flip naturally reverts
+   the rotation) or tilts their head while holding portrait.
+
+   We rotate the WRAP (not the stage) so the existing JS fit() — which
+   reads wrap.clientWidth/Height and applies scale to the stage — works
+   without orientation-aware branching. CSS handles rotation; JS handles
+   scale. Clean separation.
+   ====================================================================== */
+@media (orientation: portrait) and (max-width: 600px) {
+  .stage-wrap {
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    width: 100vh;
+    height: 100vw;
+    transform: translate(-50%, -50%) rotate(90deg);
+    transform-origin: center center;
+  }
+}
+
+/* ======================================================================
    PRINT  (§8)
    ====================================================================== */
 @media print {
@@ -1658,26 +1685,14 @@ em { font-style: italic; font-weight: inherit; }
 
   function fit() {
     const wrap = stage.parentElement;
-    const vw = wrap.clientWidth;
-    const vh = wrap.clientHeight;
-    // On portrait + phone-width viewports, rotate the stage 90° so the deck's
-    // long axis (1920px) aligns with the phone's long axis. Without this, a
-    // 360×780 portrait viewport scales 1920→360 (~19%) and content becomes
-    // unreadable; with rotation, the scale is min(360/1080, 780/1920) ≈ 33%,
-    // and text renders at a comfortable size. The user can tilt the phone to
-    // landscape (the rotation auto-reverts because the viewport flips) or
-    // tilt their head while holding portrait — either works.
-    const isPortrait = vh > vw;
-    const isPhone = vw < 600;
-    let scale, transform;
-    if (isPhone && isPortrait) {
-      scale = Math.min(vw / 1080, vh / 1920);
-      transform = `rotate(90deg) scale(${scale})`;
-    } else {
-      scale = Math.min(vw / 1920, vh / 1080);
-      transform = `scale(${scale})`;
-    }
-    stage.style.transform = transform;
+    // Scale the stage to fit the wrap. On portrait phones the wrap itself is
+    // rotated 90° via the @media query in CSS, so wrap.clientWidth/Height are
+    // already swapped (clientWidth = vh, clientHeight = vw), and this plain
+    // min(sx, sy) calculation yields the correct fit-to-rotated-viewport scale.
+    const sx = wrap.clientWidth  / 1920;
+    const sy = wrap.clientHeight / 1080;
+    const scale = Math.min(sx, sy);
+    stage.style.transform = `scale(${scale})`;
   }
   window.addEventListener('resize', fit);
   window.addEventListener('orientationchange', fit);
