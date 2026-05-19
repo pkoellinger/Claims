@@ -1658,12 +1658,29 @@ em { font-style: italic; font-weight: inherit; }
 
   function fit() {
     const wrap = stage.parentElement;
-    const sx = wrap.clientWidth  / 1920;
-    const sy = wrap.clientHeight / 1080;
-    const scale = Math.min(sx, sy);
-    stage.style.transform = `scale(${scale})`;
+    const vw = wrap.clientWidth;
+    const vh = wrap.clientHeight;
+    // On portrait + phone-width viewports, rotate the stage 90° so the deck's
+    // long axis (1920px) aligns with the phone's long axis. Without this, a
+    // 360×780 portrait viewport scales 1920→360 (~19%) and content becomes
+    // unreadable; with rotation, the scale is min(360/1080, 780/1920) ≈ 33%,
+    // and text renders at a comfortable size. The user can tilt the phone to
+    // landscape (the rotation auto-reverts because the viewport flips) or
+    // tilt their head while holding portrait — either works.
+    const isPortrait = vh > vw;
+    const isPhone = vw < 600;
+    let scale, transform;
+    if (isPhone && isPortrait) {
+      scale = Math.min(vw / 1080, vh / 1920);
+      transform = `rotate(90deg) scale(${scale})`;
+    } else {
+      scale = Math.min(vw / 1920, vh / 1080);
+      transform = `scale(${scale})`;
+    }
+    stage.style.transform = transform;
   }
   window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', fit);
   fit();
 
   document.addEventListener('keydown', e => {
