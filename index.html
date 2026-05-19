@@ -949,39 +949,64 @@ em { font-style: italic; font-weight: inherit; }
    PRINT  (§8)
    ====================================================================== */
 @media print {
-  @page { size: A4 landscape; margin: 0; }
-  html, body { background: white; overflow: visible; height: auto; }
+  /* Print page = native stage dimensions (1920×1080 CSS px = 20in × 11.25in @ 96dpi).
+     This makes the printed PDF a 1:1 pixel-for-pixel match of the on-screen deck:
+     no scaling, no overflow, no element clipping. The deck is designed at 1920×1080
+     and every position: absolute coordinate (top: 128px, bottom: 130px, etc.) is
+     expressed in those native pixels, so the page must be the same size to render
+     correctly. The earlier "A4 landscape (297mm × 210mm)" page forced the 1920px
+     content into ~1122px of horizontal space, which caused the overlap and clipping
+     bugs across slides 3–12. */
+  @page {
+    size: 1920px 1080px;
+    margin: 0;
+  }
+  html, body {
+    background: white;
+    margin: 0;
+    padding: 0;
+    width: 1920px;
+    overflow: visible;
+    height: auto;
+  }
   .nav { display: none !important; }
-  .stage-wrap { position: static; display: block; }
-  .stage { transform: none !important; width: 297mm; height: 210mm; }
+  .stage-wrap {
+    position: static !important;
+    display: block !important;
+    inset: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .stage {
+    transform: none !important;
+    width: 1920px !important;
+    height: auto !important;
+    margin: 0 !important;
+    background: transparent !important;
+  }
   .slide {
     display: block !important;
-    position: relative;
-    width: 297mm;
-    height: 210mm;
+    position: relative !important;
+    inset: auto !important;
+    width: 1920px !important;
+    height: 1080px !important;
+    margin: 0 !important;
+    padding: 0 !important;
     page-break-after: always;
-    overflow: hidden;
-    animation: none;
+    page-break-inside: avoid;
+    overflow: hidden !important;
+    animation: none !important;
   }
   .slide:last-child { page-break-after: auto; }
 
-  .slide::before {
-    width: 1.5pt !important;
-    background: var(--color-ink) !important;
+  /* Preserve background fills and image opacity so the PDF matches the browser
+     exactly. Tells Chrome to print background colors and images at full fidelity
+     (the default print behavior is to strip backgrounds to save toner). */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
-
-  .slide.cover, .slide.closing { background: white !important; }
-  .slide.cover .hero-art, .slide.closing .hero-art { opacity: 0.15 !important; }
-  .slide.cover .overlay, .slide.closing .overlay { display: none !important; }
-  .slide.cover .cover-title,
-  .slide.cover .cover-subtitle,
-  .slide.cover .cover-tagline,
-  .slide.cover .cover-eyebrow,
-  .slide.closing .closing-headline,
-  .slide.closing .closing-name { color: var(--color-ink) !important; }
-  .slide.closing .closing-email { color: var(--color-graphite) !important; }
-
-  .stage { font-size: 14px; }
 }
 </style>
 </head>
@@ -1429,11 +1454,12 @@ em { font-style: italic; font-weight: inherit; }
 
         </svg>
 
-        <!-- Answer for Simon: concrete output the architecture produces. Pushed to the bottom of the content area via justify-content: space-between on the parent. -->
+        <!-- Answer for Simon: concrete output the architecture produces. Two sentences, both italicized; compound names (5-MeO-DMT, Psilocin) wrapped in <em> for the brand-convention emphasis. Pushed to the bottom of the content area via justify-content: space-evenly on the parent. -->
         <div>
           <div style="font: 500 14px/1 var(--font-family); letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-claims-blue); margin-bottom: 12px;">Answer for Simon</div>
-          <div style="font: 400 italic 28px/1.35 var(--font-family); color: var(--color-ink); max-width: 1500px;">
-            <em>5-MeO-DMT</em> has an 80% probability to reduce depressive symptoms for &gt;3 months after a single dose.
+          <div style="font: 400 italic 28px/1.35 var(--font-family); color: var(--color-ink); max-width: 1650px;">
+            <em>5-MeO-DMT</em> has an 80% probability to reduce depressive symptoms for &gt;3 months after a single dose.<br>
+            <em>Psilocin</em> and its interaction with the 5-HT2A receptor is equally promising.
           </div>
         </div>
 
