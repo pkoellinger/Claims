@@ -7,6 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&display=swap" rel="stylesheet">
+<!-- KaTeX for LaTeX math rendering on Slide 10 (Incentive mechanism) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body, {delimiters: [{left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}], throwOnError: false});"></script>
 <style>
 /* ======================================================================
    DESIGN TOKENS — Deck Design Spec v3 · May 2026
@@ -586,6 +590,32 @@ em { font-style: italic; font-weight: inherit; }
   color: var(--color-paper);
   margin-bottom: var(--space-xl);
 }
+/* Transparent quote card for closing slide — upper-left, over background art */
+.closing-quote {
+  position: absolute;
+  left: 160px;
+  top: 90px;
+  z-index: 3;
+  max-width: 1280px;
+}
+.closing-quote .quote-display {
+  background: transparent;
+  padding: 0;
+  max-width: 1280px;
+}
+.closing-quote .qmark {
+  position: static;
+  display: block;
+  font: 300 120px/0.7 var(--font-family);
+  color: var(--color-claims-blue);
+  margin-bottom: 12px;
+}
+.closing-quote .qbody {
+  margin-top: 0;
+  color: var(--color-ink);
+  font: 400 44px/1.4 var(--font-family);
+  text-shadow: 0 1px 2px rgba(255,255,255,0.35);
+}
 .closing-name {
   font: 300 32px/1.35 var(--font-family);
   color: var(--color-paper);
@@ -635,13 +665,118 @@ em { font-style: italic; font-weight: inherit; }
 /* Slide 4 — purpose / negative space */
 .purpose-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4xl);
+  grid-template-columns: 1.25fr 1fr;
+  gap: 140px;
   height: 100%;
   align-items: center;
 }
+.purpose-thesis .line {
+  display: block;
+  white-space: nowrap;
+}
+.purpose-graph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.purpose-graph svg {
+  width: 100%;
+  height: auto;
+}
 
-/* Slide 10 — two-tier stack */
+/* Slide 9 — Inner loop (miner–validator cycle) */
+.loop-stage {
+  position: relative;
+  height: 100%;
+}
+.loop-arcs {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  overflow: visible;  /* let the top half-circle extend above the viewBox into the space below the slide title */
+}
+.role {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 360px;
+  z-index: 2;
+}
+.role-left  { left: 60px; }
+.role-right { right: 60px; }
+.role-name {
+  position: absolute;
+  top: calc(50% - 80px);  /* axis sits 80px above the content midline so the attrs below have more breathing room */
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  text-align: center;
+  font: 300 56px/1.15 var(--font-family);
+  color: var(--color-ink);
+  letter-spacing: -0.005em;
+  margin: 0;
+}
+.role-attrs {
+  position: absolute;
+  top: calc(50% - 10px);  /* 70px below the role-name center (axis at 50%-80px, attrs top at 50%-10px) */
+  left: 0;
+  right: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: center;
+}
+.role-attrs li {
+  font: 400 32px/1.5 var(--font-family);
+  color: var(--color-graphite);
+}
+
+/* Slide 10 — Incentive mechanism (reward function + variable legend) */
+.incentive-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 100px;
+  height: 100%;
+  align-items: center;
+}
+.incentive-formula {
+  font-size: 36px;        /* KaTeX scales math relative to parent font-size */
+  color: var(--color-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.incentive-formula .katex-display {
+  margin: 0;              /* override KaTeX's default block margin */
+}
+.incentive-vars {
+  font: 400 30px/1.6 var(--font-family);
+  color: var(--color-ink);
+  font-size: 30px;        /* shared parent size for the inline KaTeX glyphs */
+}
+.incentive-vars dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 40px;
+  row-gap: 18px;
+  margin: 0;
+  align-items: center;   /* each row's dt vertically centers with its dd */
+}
+.incentive-vars dt {
+  color: var(--color-ink);
+  text-align: left;
+  font-size: 32px;
+  /* KaTeX inline math sets italic + math font automatically */
+}
+.incentive-vars dd {
+  margin: 0;
+  color: var(--color-graphite);
+  font: 400 30px/1.35 var(--font-family);
+}
+
+/* Slide 11 — two-tier stack (legacy class names retained) */
 .stack-substrate {
   position: relative;
   width: 100%;
@@ -1097,7 +1232,7 @@ em { font-style: italic; font-weight: inherit; }
       <h2 class="slide-title t-title">Frontier models hallucinate science.</h2>
       <div class="content" style="display:flex; flex-direction:column; justify-content:flex-start; padding-top: 24px;">
         <div class="t-subtitle" style="color: var(--color-graphite); margin-bottom: 80px;">
-          Hallucinated references on ScholarQABench<sup style="color: var(--color-claims-blue); font-size: 60%; font-weight: 500;">1,&nbsp;2</sup> — biomedical and neuroscience queries.
+          Hallucinated references on ScholarQABench<sup style="color: var(--color-claims-blue); font-size: 60%; font-weight: 500;">1,&nbsp;2</sup> — biomedical and neuroscience.
         </div>
 
         <div style="max-width: 1500px;">
@@ -1145,15 +1280,17 @@ em { font-style: italic; font-weight: inherit; }
       <div class="content">
         <div class="purpose-grid">
           <div>
-            <h3 class="t-title" style="color: var(--color-ink); margin-bottom: 32px; font-weight: 300;">
-              We build the substrate<br>that makes the negative space of science<br>computable.
+            <h3 class="t-title purpose-thesis" style="color: var(--color-ink); margin-bottom: 64px; font-weight: 300;">
+              <span class="line">The claim-evidence graph</span>
+              <span class="line">that makes the negative</span>
+              <span class="line">space of science computable.</span>
             </h3>
             <div style="font: 400 32px/1.4 var(--font-family); color: var(--color-graphite); max-width: 720px;">
               Scientific AI needs structure,<br>not just scale.
             </div>
           </div>
-          <div style="position: relative; height: 600px;">
-            <svg viewBox="0 0 800 600" style="width:100%; height:100%;" preserveAspectRatio="xMidYMid meet">
+          <div class="purpose-graph">
+            <svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
               <!-- Sparse network with negative space -->
               <!-- Edges -->
               <line x1="140" y1="120" x2="280" y2="200" stroke="#0B1220" stroke-width="1"/>
@@ -1191,10 +1328,10 @@ em { font-style: italic; font-weight: inherit; }
               <circle cx="600" cy="540" r="10" fill="none" stroke="#B87333" stroke-width="1.5" stroke-dasharray="3 3"/>
 
               <!-- Label for the contradiction -->
-              <text x="430" y="245" fill="#B87333" font-family="Inter" font-size="13" font-style="italic" letter-spacing="0.06em">contradicts</text>
+              <text x="420" y="245" fill="#B87333" font-family="Inter" font-size="18" font-style="italic" letter-spacing="0.06em">contradicts</text>
 
               <!-- Label for negative space region -->
-              <text x="180" y="555" fill="#B87333" font-family="Inter" font-size="13" font-style="italic" letter-spacing="0.06em">negative space</text>
+              <text x="180" y="560" fill="#B87333" font-family="Inter" font-size="18" font-style="italic" letter-spacing="0.06em">negative space</text>
             </svg>
           </div>
         </div>
@@ -1402,9 +1539,94 @@ em { font-style: italic; font-weight: inherit; }
     </section>
 
     <!-- ================================================================
-         SLIDE 9 — THE PRODUCT (Bowtie architecture · Centerpiece)
+         SLIDE 9 — INNER LOOP (Miner–Validator cycle)
          ================================================================ -->
-    <section class="slide" data-section="06 · Product" data-page="09">
+    <section class="slide" data-section="06 · Inner Loop" data-page="09">
+      <h2 class="slide-title t-title">Inner loop.</h2>
+      <div class="content">
+        <div class="loop-stage">
+          <svg class="loop-arcs" viewBox="0 0 1712 720" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <marker id="loop-arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="14" markerHeight="14" orient="auto">
+                <path d="M 0,0 L 12,6 L 0,12 Z" fill="#0B1220"/>
+              </marker>
+            </defs>
+            <!-- Top half-circle arc, Miners (9 o'clock) → 12 → Validators (3 o'clock). True circular arc via SVG elliptical-arc command with rx=ry=224 (chord 448 = diameter, perfect half-circle). Diameter shrunk a further ~20% from the previous 560 — total reduction from the original 800 is ~44%. Top arc chord at y=240; peak at viewBox y=16, well inside the viewBox (slide y=256, comfortably below the title at slide y≤192). -->
+            <path d="M 632,240 A 224,224 0 0 1 1080,240" fill="none" stroke="#0B1220" stroke-width="2.5" marker-end="url(#loop-arrow)"/>
+            <!-- Bottom half-circle, Validators → 6 → Miners. Mirrors the top: endpoints at y=320, peak at viewBox y=544. The 80px vertical gap between top-arc endpoint (y=240) and bottom-arc endpoint (y=320) means the two arcs never touch — the role-name sits centered in that gap. -->
+            <path d="M 1080,320 A 224,224 0 0 1 632,320" fill="none" stroke="#0B1220" stroke-width="2.5" marker-end="url(#loop-arrow)"/>
+          </svg>
+
+          <div class="role role-left">
+            <h3 class="role-name">Miners</h3>
+            <ul class="role-attrs">
+              <li>Source</li>
+              <li>Claim-evidence</li>
+              <li>Concept binding</li>
+              <li>Judgment</li>
+            </ul>
+          </div>
+
+          <div class="role role-right">
+            <h3 class="role-name">Validators</h3>
+            <ul class="role-attrs">
+              <li>Assign</li>
+              <li>Verify</li>
+              <li>Gold set</li>
+              <li>Calibrate</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo"><span class="wordmark">Claims</span></div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 10 — INCENTIVE MECHANISM (Reward function + variable legend)
+         ================================================================ -->
+    <section class="slide" data-section="07 · Incentive Mechanism" data-page="10">
+      <h2 class="slide-title t-title">Incentive mechanism.</h2>
+      <div class="content">
+        <div class="incentive-grid">
+          <!-- Left half: reward function in LaTeX, rendered by KaTeX auto-render -->
+          <div class="incentive-formula">
+            \[
+            \begin{aligned}
+            R_m ={}& \lambda_A S_A \\
+            &+ \lambda_B G_A S_B \\
+            &+ \lambda_C G_A G_B S_C \\
+            &+ \lambda_D G_A G_B G_C S_D \\
+            &- P_{spam} - P_{collusion} - P_{reset}.
+            \end{aligned}
+            \]
+          </div>
+
+          <!-- Right half: variable legend. dt/dd pairs sit as direct children of the grid <dl> so the CSS grid lays each symbol in column 1 and each description in column 2 of the same row. Each variable is wrapped in \(...\) so KaTeX renders it in math italic with matching glyph style. -->
+          <div class="incentive-vars">
+            <dl>
+              <dt>\(R_m\)</dt><dd>Reward for miner \(m\)</dd>
+              <dt>\(A\)</dt><dd>Source integrity and coverage</dd>
+              <dt>\(B\)</dt><dd>Atomic extraction</dd>
+              <dt>\(C\)</dt><dd>Claim graph construction</dd>
+              <dt>\(D\)</dt><dd>Evidence judgment and prediction</dd>
+              <dt>\(\lambda\)</dt><dd>Task weight</dd>
+              <dt>\(G\)</dt><dd>Gate weight</dd>
+              <dt>\(S\)</dt><dd>Task score</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo"><span class="wordmark">Claims</span></div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 11 — THE PRODUCT (Bowtie architecture · Centerpiece)
+         ================================================================ -->
+    <section class="slide" data-section="08 · Product" data-page="11">
       <h2 class="slide-title t-title">The Product.</h2>
 
       <div class="content" style="top: 200px; bottom: 80px; display: flex; flex-direction: column; justify-content: space-evenly;">
@@ -1498,9 +1720,9 @@ em { font-style: italic; font-weight: inherit; }
     </section>
 
     <!-- ================================================================
-         SLIDE 10 — WHY BITTENSOR
+         SLIDE 12 — WHY BITTENSOR
          ================================================================ -->
-    <section class="slide" data-section="07 · Why Bittensor" data-page="10">
+    <section class="slide" data-section="09 · Why Bittensor" data-page="12">
       <h2 class="slide-title t-title">Why Bittensor.</h2>
       <div class="content" style="display:flex; flex-direction:column; justify-content:center; padding-bottom: 130px;">
         <ul class="bittensor-list">
@@ -1542,9 +1764,9 @@ em { font-style: italic; font-weight: inherit; }
     </section>
 
     <!-- ================================================================
-         SLIDE 11 — BUSINESS MODEL + MOAT
+         SLIDE 13 — BUSINESS MODEL + MOAT
          ================================================================ -->
-    <section class="slide" data-section="08 · Business Model" data-page="11">
+    <section class="slide" data-section="10 · Business Model" data-page="13">
       <h2 class="slide-title t-title">How we monetize. How we keep it.</h2>
       <div class="content" style="display:flex; flex-direction:column; justify-content:flex-start; padding-top: 100px;">
         <div class="bm-grid">
@@ -1576,9 +1798,9 @@ em { font-style: italic; font-weight: inherit; }
     </section>
 
     <!-- ================================================================
-         SLIDE 12 — ROADMAP
+         SLIDE 14 — ROADMAP
          ================================================================ -->
-    <section class="slide" data-section="09 · Roadmap" data-page="12">
+    <section class="slide" data-section="11 · Roadmap" data-page="14">
       <h2 class="slide-title t-title">Roadmap.</h2>
       <div class="content" style="position: relative;">
         <div class="roadmap-wrap">
@@ -1626,13 +1848,21 @@ em { font-style: italic; font-weight: inherit; }
     </section>
 
     <!-- ================================================================
-         SLIDE 13 — CLOSING
+         SLIDE 15 — CLOSING
          ================================================================ -->
     <section class="slide closing" data-section="—">
       <div class="hero-art"></div>
       <div class="overlay"></div>
+      <div class="closing-quote">
+        <div class="quote-display">
+          <div class="qmark">&ldquo;</div>
+          <div class="qbody">
+            Frankly, we&rsquo;re skeptical that 42 is the answer.<br>
+            Claims will know.
+          </div>
+        </div>
+      </div>
       <div class="closing-text">
-        <h1 class="closing-headline">Let&rsquo;s talk.</h1>
         <div class="closing-name">Prof. Dr. Philipp Koellinger</div>
         <div class="closing-email">philipp@desci.com</div>
       </div>
