@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Claims: A Bittensor subnet for the canonical claim–evidence graph of science</title>
+<style>
+  body { font-family: Georgia, "Times New Roman", serif; max-width: 760px; margin: 2em auto; padding: 0 1em; line-height: 1.5; color: #111; }
+  h1 { font-size: 1.5em; margin-bottom: 0.2em; }
+  h2 { font-size: 1.2em; margin-top: 1.8em; border-bottom: 1px solid #ddd; padding-bottom: 0.2em; }
+  h3 { font-size: 1.05em; margin-top: 1.4em; }
+  .authors { font-size: 0.95em; margin: 0.4em 0; }
+  .affiliations { font-size: 0.85em; color: #444; margin-bottom: 1.2em; }
+  .abstract { background: #f5f5f3; padding: 0.8em 1em; border-left: 3px solid #888; font-size: 0.95em; }
+  .placeholder { border: 1px dashed #999; background: #fffbe8; padding: 0.8em 1em; margin: 1em 0; font-size: 0.93em; }
+  .placeholder b { color: #884400; }
+  .team-note { border: 1px dashed #4477aa; background: #eaf3fa; padding: 0.8em 1em; margin: 1em 0; font-size: 0.93em; }
+  .team-note b.label { color: #224477; }
+  figure { margin: 1.4em 0; text-align: center; }
+  figcaption { font-size: 0.88em; color: #333; margin-top: 0.5em; text-align: left; }
+  pre { background: #f7f7f5; border: 1px solid #ddd; padding: 0.6em 0.9em; font-size: 0.85em; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9em; margin: 1em 0; }
+  th, td { border: 1px solid #ccc; padding: 0.4em 0.6em; text-align: left; vertical-align: top; }
+  th { background: #efefec; }
+  caption { caption-side: top; font-size: 0.9em; text-align: left; padding: 0.2em 0 0.4em 0; }
+  sup { font-size: 0.78em; }
+  .refs { font-size: 0.88em; }
+  .refs ol li { margin-bottom: 0.4em; }
+  .meta { font-size: 0.82em; color: #666; }
+  blockquote { border-left: 3px solid #bbb; margin: 1em 0; padding: 0.3em 1em; color: #333; font-style: italic; }
+  .claim-table td.label { width: 28%; font-variant: small-caps; color: #444; }
+  .claim-table tr.section td { background: #efefec; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><i>Claims</i>: A Bittensor subnet for the canonical claim–evidence graph of science</h1>
+  <p class="authors"><b>Philipp D. Koellinger</b><sup>1,2,*</sup>, <b>Christian Roessler</b><sup>3</sup>, <b>Sina Iman</b><sup>1</sup>, <b>Ogban Ugot</b><sup>1</sup></p>
+  <p class="affiliations">
+    <sup>1</sup>DeSci Labs AG, Baech, Switzerland.
+    <sup>2</sup>School of Business and Economics, Vrije Universiteit Amsterdam.
+    <sup>3</sup>Department of Economics &amp; Smith Center for Private Enterprise Studies, California State University, East Bay.
+    <sup>*</sup>Corresponding author: <a href="mailto:philipp@desci.com">philipp@desci.com</a>.
+  </p>
+  <p class="meta">Lightpaper draft v0.1 — <span>22 May 2026</span>. Prepared for the Proof of Talk Bittensor Pitch Competition, Paris, 2–3 June 2026. <b>Pre-print draft for co-author review. Not for external distribution.</b></p>
+</header>
+
+<section class="abstract">
+  <p><b>Abstract.</b> Three hundred million scientific papers contain roughly a trillion words of expert knowledge — the substrate on which roughly three trillion dollars of annual research and development depends. Almost none of it is structured as machine-readable and AI-actionable data. The current generation of AI tools cannot fix this: frontier large language models fabricate scientific references at rates above sixty per cent on long-form question answering<sup>1,2</sup>. Retrieval-augmented generation (RAG) systems eliminate fabrication. Our own product <a href="https://sciweave.com/web" target="_blank" rel="noopener"><i>SciWeave</i></a>, for instance, hits a 0% hallucinated-reference rate on the ScholarQABench benchmark<sup>1,3</sup>. But RAG systems can only return summary paragraphs. They cannot see how solid the evidence for a claim is or where the literature has gaps and missing links that enable scientific progress. <b><i>Claims</i></b> is a Bittensor subnet that produces the missing layer: a structured graph of subject–predicate–object claims, each linked to the specific evidence in the source paper that supports, contradicts, or qualifies it. Miners extract claim–evidence pairs from peer-reviewed papers selected by validators; validators score miners against reference models and gold datasets curated with domain experts and assemble the canonical graph for science. The resulting structured data is a propietary, off-chain product accessible via metered API and MCP connections. Controlled-vocabulary mappings and customer-specific ontologies enhance the data and enable model training and AI research workflows for pharma, biotech, and defense R&amp;D clients. Product revenue is partly recycled into the subnet Alpha pool through auto-staking, which anchors token value to usage.</p>
+</section>
+
+<h2>1. Introduction</h2>
+
+<p>Roughly three trillion U.S. dollars are spent globally each year on research and development<sup>4</sup>. Over 300 million scientific works and adjacent technical artefacts exist containing more than a trillion words, all optimized for human consumption. None of this corpus is natively structured in a way that machines can make sense of it. Every scientist, every R&amp;D team, every regulator, every scientific AI system that needs to know "what is currently known about X, with what evidence, and what contradicts it" reconstructs that knowledge independently by hand or by approximation.</p>
+
+<p>Generative AI could potentially outperform leading human scientists and speed up scientific progress exponentially. However, the current reality looks different. Frontier large language models, queried without retrieval tools, fabricate cited papers at rates above sixty per cent on long-form scientific question-answering tasks<sup>1,2,5</sup>. This disqualifies them for serious research work. Retrieval-augmented generation (RAG) — the architecture adopted by every credible scientific AI assistant — solves the hallucination problem by constraining the model to passages it actually retrieves<sup>3,6,7</sup>. We have shipped such a RAG architecture at production scale: <a href="https://sciweave.com/web" target="_blank" rel="noopener"><i>SciWeave</i></a>, the consumer product built by our team, reaches a 0% hallucinated-reference rate on the citation-grounded ScholarQABench benchmark introduced by Asai et al. in <i>Nature</i><sup>1,3</sup>. But RAG systems can only paraphrase what authors wrote. They cannot reliably spot disagreements or gaps, differentiate between weak and strong evidence, identify replication problems, or surface plausible links that have not been explored yet.</p>
+
+<p>The remaining gap is structural, not scale. No amount of training compute alone characterises the <i>negative space</i> of scientific knowledge because a generative model can only retrieve and recombine what authors have already said. To make that space computable, the literature has to be decomposed into machine-readable claims, each linked to its specific evidence, with provenance, evidence type, quantitative detail, and explicit relationships (supports / contradicts / refines / replicates) between claims. That is the substrate we propose to build.</p>
+
+<p>We argue here that producing this substrate is a task that belongs on Bittensor rather than inside any single company for three reasons. First, claim extraction from a fixed paper is probabilistic: any one model run is a point estimate, and consensus across many independently configured extractors yields both a sharper signal and a calibrated confidence interval per claim. A single-vendor pipeline collapses extraction onto one model's view. Second, the resulting commodity has objectively measurable quality dimensions that an incentive mechanism can reward (e.g. accuracy and granularity evaluated against expert-curated gold sets and reference models). An open competition over those dimensions raises data quality faster than any single-vendor pipeline can match. Third, token-funded distributed labour is structurally more capital-efficient than payroll-funded extraction at the scale of the full scientific corpus.</p>
+
+<h2>2. Background</h2>
+
+<h3>2.1 Hallucinated citations are a present problem, not a future risk</h3>
+
+<p>Wilder &amp; Walters<sup>5</sup> showed in <i>Scientific Reports</i> that ChatGPT fabricates bibliographic citations at high rates and that even its real GPT-4 citations contain substantive errors in roughly a quarter of cases. Recent domain-specific replications confirm the pattern. Manley et al.<sup>2</sup> asked GPT-4o to write a plastic-surgery literature review with citations: of 21 references generated, 5 were correct, 8 had publication-detail errors, and 8 could not be located on PubMed at all — a fabrication rate of 38%. Glynn<sup>8</sup> documents fabricated citations already entering peer-reviewed bibliographies; downstream papers then cite the contaminated manuscripts, and the error compounds at the corpus level. Pellegrina &amp; Helmy<sup>9</sup> review current AI-error detection tools and find them insufficient to plug the gap at manuscript-submission volumes.</p>
+
+<p>Asai et al.<sup>1</sup>, publishing in <i>Nature</i>, introduced ScholarQABench — a citation-grounded long-form scientific QA benchmark covering 1,451 biomedical and 1,308 neuroscience questions — precisely to make these failure modes measurable. On a 100-question random sample we ran for <a href="https://sciweave.com/web" target="_blank" rel="noopener"><i>SciWeave</i></a>'s benchmark report<sup>3</sup>, GPT-5.2 hallucinated 59% of its cited papers and Claude Opus 4.6 hallucinated 62%.</p>
+
+<h3>2.2 What RAG solves, and what it does not</h3>
+
+<p>Retrieval-augmented generation constrains an LLM to passages retrieved from an external index. When the index is curated to peer-reviewed sources, fabrication is structurally precluded: any citation the model emits is a real document, by construction<sup>6,7</sup>. <a href="https://sciweave.com/web" target="_blank" rel="noopener"><i>SciWeave</i></a>'s retrieval index spans roughly 300 million scientific works via <a href="https://openalex.org/" target="_blank" rel="noopener">OpenAlex</a>, <a href="https://clinicaltrials.gov/" target="_blank" rel="noopener">ClinicalTrials.gov</a>, <a href="https://www.cochranelibrary.com/" target="_blank" rel="noopener">Cochrane</a>, and <a href="https://pubmed.ncbi.nlm.nih.gov/" target="_blank" rel="noopener">PubMed</a>. On 100 sample question from ScholarQABench and thousands of referenced articles (~10 per query), <a href="https://sciweave.com/web" target="_blank" rel="noopener"><i>SciWeave</i></a> hallucinated zero papers, while also having higher citation recall and precission than frontier LLMs.<sup>3</sup>.</p>
+
+<p>However, solving the hallucinated references problem is not sufficient to enable precise scientific reasoning by AI. Additional recent benchmark studies make this concrete. Li et al.<sup>10</sup>, in <i>Science Advances</i>, evaluate retrieval-augmented LLMs across five biomedical natural-language-processing tasks and eleven datasets, including counterfactual and self-awareness testbeds, and report that RAG systems still struggle with robustness when retrieved passages are noisy, distractive, or counterfactual — and remain weak at recognising when they should abstain. Hou et al.<sup>11</sup>, evaluating a dietary-supplement RAG system, find that pairing retrieval with a structured knowledge graph lifts accuracy from 62% (bare GPT-4o) to 99% (RAG-over-graph) on a 1,000-question evaluation set. Joy &amp; Su<sup>12</sup> show a similar pattern on biomedical mechanism questions: federated retrieval over more than sixty curated knowledge sources raises GPT-4o gene-mechanism accuracy from 51% to 75.8%.</p>
+
+<p>The pattern across these results is consistent: vanilla RAG removes fabrication but caps short of the accuracy required for high-stakes scientific reasoning. The next frontier requires <i>structured data in combination with retrieval</i> (e.g. knowledge graphs, controlled vocabularies, and claim-level evidence linkage). Such a canonical knowledge graph for science does not exist yet. That is the gap <i>Claims</i> fills.</p>
+
+<h3>2.3 The state of automated claim–evidence extraction</h3>
+
+<p>The closest published work to what miners on <i>Claims</i> will produce is the line on automated scientific claim verification and structured extraction. Edelman &amp; Skolnick<sup>13</sup> describe Valsci, an open-source utility that combines retrieval, bibliometric scoring, and chain-of-thought prompting to verify scientific claims at batch scale against Semantic Scholar; on the SciFact benchmark, Valsci substantially reduces citation hallucination over base GPT-4o while maintaining low misclassification.</p>
+
+<p>What this literature does <i>not</i> yet produce is a continuously maintained, openly accessible, decision-grade graph: claims as atomic subject–predicate–object triples; evidence records with study design, sample size, effect size, confidence interval, and boundary conditions; provenance to the originating paper and passage; explicit support / contradict / refine relationships between claims. Existing tools either evaluate isolated claims, generate summaries, or remain inside the walled garden of one application. The shared substrate is missing. The remainder of this paper specifies one and proposes a market mechanism to produce it.</p>
+
+<h2>3. The digital commodity</h2>
+
+<p>Miners on the <i>Claims</i> subnet produce a small, stable set of structured objects extracted from peer-reviewed scientific papers: a <b>Paper</b> (source bibliographic metadata), one or more <b>Span</b>s (precise text passages from the paper that anchor a claim or evidence for provenance), one or more <b>Claim</b>s (each a subject–predicate–object proposition with epistemic metadata), one or more <b>EvidenceItem</b>s (the empirical or theoretical results that bear on a claim), and explicit <b>ClaimEvidenceLink</b>s relating claims to the evidence that supports, qualifies, or contradicts them. Together these five objects form the queryable graph. The full prototype schema is reproduced in <b>Appendix 1</b> and tracked on the public RFC repository<sup>25</sup>; the conceptual overview and a worked example follow.</p>
+
+<p>The fields below are a conceptual overview. The complete specification (object schemas as JSON, profile definitions, ontology-annotation pattern, and graph translation) is in Appendix 1.</p>
+
+<table>
+<caption><b>Table 1.</b> Conceptual overview of the five core objects in the <i>Claims</i> graph. Each object has a stable required core plus two extension points (<code>context</code> for qualifiers, <code>details</code> for type-specific structured payloads). Full schemas in Appendix 1.</caption>
+<thead>
+<tr><th>Object</th><th>Purpose</th><th>Key fields</th></tr>
+</thead>
+<tbody>
+<tr><td><b>Paper</b></td><td>Source document or artefact.</td><td>DOI, PMID, title, authors, journal, year, source type, open-access status.</td></tr>
+<tr><td><b>Span</b></td><td>Provenance anchor — the precise text passage (or table, figure, caption) a claim or evidence is drawn from.</td><td>section type, page, character offsets, text excerpt, table / figure / caption IDs.</td></tr>
+<tr><td><b>Claim</b></td><td>A subject–predicate–object proposition the paper asserts, with epistemic metadata.</td><td>claim text; subject / predicate / object (each a <i>SemanticField</i>); claim kind (result, hypothesis, method, ...); epistemic status (empirical, theoretical, cited, ...); support origin (own results, cited, ...); source span IDs; context qualifiers (population, species, ...); extractor confidence.</td></tr>
+<tr><td><b>EvidenceItem</b></td><td>A first-class evidence record describing one empirical or theoretical result.</td><td>evidence method (RCT, meta-analysis, laboratory experiment, ...); outcome type (clinical outcome, molecular binding, ...); presentation type (text, table, figure, ...); role (supports, contradicts, qualifies, backgrounds); summary text; context; structured <code>details</code> (effect size, n, CI, p-value, ...); source span IDs; ontology classification.</td></tr>
+<tr><td><b>ClaimEvidenceLink</b></td><td>The explicit relation between a claim and an evidence item.</td><td>claim ID, evidence ID, relation (supports / contradicts / qualifies / backgrounds), confidence.</td></tr>
+</tbody>
+</table>
+
+<p>One Claim may be linked to many EvidenceItems; one EvidenceItem may bear on many Claims. The full graph is the union of these objects across the literature, indexed by claim and entity.</p>
+
+<p><b>Two stable extension rules.</b> The schema deliberately keeps the object model fixed and pushes variability into two places: <code>context</code> (applicability qualifiers — population, species, dose, comparator, timepoint, assay type) and <code>details</code> (type-specific structured payloads — for example, an RCT EvidenceItem's <code>details</code> exposes <code>effect_size</code>, <code>ci_low</code>, <code>ci_high</code>, <code>p_value</code>, <code>sample_size</code>, while a laboratory-experiment EvidenceItem's <code>details</code> exposes <code>measurement_type</code>, <code>target</code>, <code>assay_type</code>, and so on). Domain-specific shapes are codified as <i>profiles</i> rather than as new top-level objects.</p>
+
+<p><b>Ontology enhancement.</b> Any field whose value benefits from semantic normalisation — a drug, a gene, a disease, a species, a method, a predicate — is wrapped in a uniform <i>SemanticField</i> structure that carries the raw text, a normalised text, candidate ontology mappings, a selected mapping, and the mapping method. The same pattern is reused everywhere ontology enhancement is relevant. Mapping is optional: a claim with no resolved mapping is still queryable on its raw text, and mapping adds semantic recall and disambiguation. The choice of ontology vocabularies — MeSH, ChEBI, NCBITaxon, ECO, customer-specific controlled vocabularies — is per-deployment and is the substrate on which the Palantir-Foundry-style customer-ontology moat (§4.3) is built.</p>
+
+<p>Table 2 shows the example populated against the prototype schema, anchored on Hanlon et al.'s 2025 network meta-analysis in <i>JAMA</i><sup>15</sup>. This is the kind of structured object that does not exist today at corpus scale and is required for downstream customers — R&amp;D teams making go/no-go decisions, scientific AI agents grounding their reasoning, regulators auditing evidence quality.</p>
+
+<table class="claim-table">
+<caption><b>Table 2.</b> A filled set of <i>Claims</i>-schema objects extracted from Hanlon et al.'s 2025 network meta-analysis in <i>JAMA</i><sup>15</sup>. Every field is provenance-traceable. Ontology IDs shown as illustrative; production mappings resolve against the indicated ontology source. The full JSON-form objects and the <code>SemanticField</code> wrapper are in Appendix 1.</caption>
+<colgroup>
+  <col style="width:28%"><col style="width:72%">
+</colgroup>
+<tbody>
+  <tr class="section"><td colspan="2">Paper — paper_h2025</td></tr>
+  <tr><td class="label">DOI</td><td><a href="https://doi.org/10.1001/jama.2024.27402">10.1001/jama.2024.27402</a></td></tr>
+  <tr><td class="label">title</td><td>Age and Sex Differences in Efficacy of Treatments for Type 2 Diabetes: A Network Meta-Analysis</td></tr>
+  <tr><td class="label">journal / year</td><td><i>JAMA</i> 333(12), 1062–1073 (2025)</td></tr>
+  <tr><td class="label">source type</td><td>journal_article</td></tr>
+
+  <tr class="section"><td colspan="2">Span — span_01 (the source passage anchoring claim and evidence)</td></tr>
+  <tr><td class="label">paper_id</td><td>paper_h2025</td></tr>
+  <tr><td class="label">section type</td><td>RESULTS</td></tr>
+  <tr><td class="label">text</td><td>"SGLT2 inhibitors significantly reduced HbA1c, with absolute reduction attenuating by approximately 0.24% per 30-year increment in age (n = 309,503 across 592 trials)." [excerpt; verbatim wording to be locked against source]</td></tr>
+
+  <tr class="section"><td colspan="2">Claim — claim_01</td></tr>
+  <tr><td class="label">claim text</td><td>SGLT2 inhibitors reduce HbA1c in adults with type 2 diabetes.</td></tr>
+  <tr><td class="label">subject</td><td><i>SemanticField:</i> value = "SGLT2 inhibitors"; entity_type = chemical; ontology → MeSH (illustrative ID for "Sodium-Glucose Transporter 2 Inhibitors"); mapping_status = mapped.</td></tr>
+  <tr><td class="label">predicate</td><td><i>SemanticField:</i> value = "reduce"; entity_type = predicate; ontology → CustomPredicateVocabulary:decreases.</td></tr>
+  <tr><td class="label">object</td><td><i>SemanticField:</i> value = "HbA1c"; entity_type = phenotype; ontology → MeSH (illustrative ID for "Glycated Hemoglobin").</td></tr>
+  <tr><td class="label">claim_kind</td><td>result</td></tr>
+  <tr><td class="label">epistemic_status</td><td>empirical</td></tr>
+  <tr><td class="label">support_origin</td><td>cited_results (meta-analysis aggregating prior RCTs)</td></tr>
+  <tr><td class="label">context.population</td><td><i>SemanticField:</i> "adults with type 2 diabetes" → MeSH (illustrative ID for "Diabetes Mellitus, Type 2").</td></tr>
+  <tr><td class="label">source_span_ids</td><td>[span_01]</td></tr>
+  <tr><td class="label">extractor_confidence</td><td>0.91</td></tr>
+
+  <tr class="section"><td colspan="2">EvidenceItem — ev_01 (role: supports)</td></tr>
+  <tr><td class="label">evidence_method</td><td>meta_analysis (network meta-analysis of 592 RCTs)</td></tr>
+  <tr><td class="label">outcome_type</td><td>clinical_outcome</td></tr>
+  <tr><td class="label">presentation_type</td><td>text</td></tr>
+  <tr><td class="label">summary_text</td><td>Mean HbA1c reduction significant; absolute reduction attenuates ≈0.24% per 30-year increment in age.</td></tr>
+  <tr><td class="label">context.population</td><td>"adults with type 2 diabetes"</td></tr>
+  <tr><td class="label">context.species</td><td><i>SemanticField:</i> "human" → NCBITaxon:9606 (<i>Homo sapiens</i>); mapping_status = mapped.</td></tr>
+  <tr><td class="label">details.outcome_name</td><td>HbA1c reduction</td></tr>
+  <tr><td class="label">details.sample_size</td><td>309,503</td></tr>
+  <tr><td class="label">details.study_count</td><td>592</td></tr>
+  <tr><td class="label">details.effect_modifier</td><td>age: −0.24% per 30-year increment</td></tr>
+  <tr><td class="label">ontology (item)</td><td>ECO (illustrative ID for "meta-analysis evidence")</td></tr>
+  <tr><td class="label">source_span_ids</td><td>[span_01]</td></tr>
+
+  <tr class="section"><td colspan="2">EvidenceItem — ev_02 (role: qualifies)</td></tr>
+  <tr><td class="label">evidence_method</td><td>randomized_controlled_trial (subgroup analysis at eGFR &lt; 45)</td></tr>
+  <tr><td class="label">outcome_type</td><td>clinical_outcome</td></tr>
+  <tr><td class="label">summary_text</td><td>Effect magnitude reduced relative to main result in the renal-impairment subgroup.</td></tr>
+  <tr><td class="label">context.population</td><td>"adults with type 2 diabetes and renal impairment (eGFR &lt; 45)"</td></tr>
+  <tr><td class="label">context.species</td><td>"human" → NCBITaxon:9606</td></tr>
+  <tr><td class="label">details.sample_size</td><td>[PLACEHOLDER — pooled n to be resolved against the cited subgroup analysis]</td></tr>
+
+  <tr class="section"><td colspan="2">ClaimEvidenceLink — link_01</td></tr>
+  <tr><td class="label">claim_id → evidence_id</td><td>claim_01 → ev_01</td></tr>
+  <tr><td class="label">relation</td><td>supports</td></tr>
+  <tr><td class="label">confidence</td><td>0.92</td></tr>
+
+  <tr class="section"><td colspan="2">ClaimEvidenceLink — link_02</td></tr>
+  <tr><td class="label">claim_id → evidence_id</td><td>claim_01 → ev_02</td></tr>
+  <tr><td class="label">relation</td><td>qualifies</td></tr>
+  <tr><td class="label">confidence</td><td>[PLACEHOLDER]</td></tr>
+</tbody>
+</table>
+
+<div class="placeholder">
+<b>[TO OGBAN]</b> The full prototype schema — including the <code>SemanticField</code> and <code>OntologyAnnotation</code> patterns, profile definitions (RCT, laboratory experiment, meta-analysis), the implementation contract for miners, and the graph-translation rules — is reproduced in Appendix 1 and tracked on the public RFC repository<sup>25</sup>. Please confirm the appendix faithfully mirrors the canonical version in the GitHub repo and flag any drift before circulation.
+</div>
+
+<p><b>Why claims, not papers.</b> A paper is a unit of authorship; a claim is a unit of knowledge. A single paper contains many claims of varying strength; many papers make overlapping claims with differing evidence. Modeling claims as first-class objects — rather than treating the paper as the atomic unit — is the design choice that makes the negative space computable and that supports the structured disagreement layer described in §4.3.</p>
+
+<p><b>The data product.</b> The miner-produced stream of structured ClaimRecords is the substrate on which the company builds. Public, openly accessible canonical claim handles exist only at the level required for cross-validation and audit. The full, enriched graph — with controlled-vocabulary mappings, customer-specific ontologies, contradiction maps, evidence-strength scoring, and curated Views — is paywalled under a freemium model, with tailor-made solutions for enterprise customers on top. We currently have one paid pilot project with a biotech startup in the making, with two additional potential clients (biotech &amp; defense) lined up after we have shipped the first pilot.</p>
+
+<h2>4. Architecture and roles</h2>
+
+<h3>4.1 System overview</h3>
+
+<figure>
+<svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" style="background:#fafaf7; border:1px solid #ddd;">
+  <!-- Title -->
+  <text x="360" y="24" text-anchor="middle" font-family="Georgia, serif" font-size="14" font-weight="bold">Figure 1 — Claims subnet data flow</text>
+
+  <!-- Sources -->
+  <rect x="20" y="60" width="130" height="60" fill="#fff" stroke="#444"/>
+  <text x="85" y="85" text-anchor="middle" font-family="Georgia, serif" font-size="12" font-weight="bold">Scientific literature</text>
+  <text x="85" y="103" text-anchor="middle" font-family="Georgia, serif" font-size="10">OpenAlex, PubMed,</text>
+  <text x="85" y="115" text-anchor="middle" font-family="Georgia, serif" font-size="10">ClinicalTrials, Cochrane</text>
+
+  <!-- Validators -->
+  <rect x="220" y="40" width="160" height="100" fill="#fff" stroke="#444"/>
+  <text x="300" y="65" text-anchor="middle" font-family="Georgia, serif" font-size="12" font-weight="bold">Validators</text>
+  <text x="300" y="85" text-anchor="middle" font-family="Georgia, serif" font-size="10">– select source papers</text>
+  <text x="300" y="100" text-anchor="middle" font-family="Georgia, serif" font-size="10">– assign to random miner cohort</text>
+  <text x="300" y="115" text-anchor="middle" font-family="Georgia, serif" font-size="10">– score against reference model &amp; gold</text>
+  <text x="300" y="130" text-anchor="middle" font-family="Georgia, serif" font-size="10">– curate canonical graph</text>
+
+  <!-- Miners -->
+  <rect x="450" y="40" width="160" height="100" fill="#fff" stroke="#444"/>
+  <text x="530" y="65" text-anchor="middle" font-family="Georgia, serif" font-size="12" font-weight="bold">Miners</text>
+  <text x="530" y="85" text-anchor="middle" font-family="Georgia, serif" font-size="10">– receive paper + task envelope</text>
+  <text x="530" y="100" text-anchor="middle" font-family="Georgia, serif" font-size="10">– run extraction pipeline</text>
+  <text x="530" y="115" text-anchor="middle" font-family="Georgia, serif" font-size="10">– return structured ClaimRecords</text>
+  <text x="530" y="130" text-anchor="middle" font-family="Georgia, serif" font-size="10">– are scored</text>
+
+  <!-- Gold datasets -->
+  <rect x="220" y="170" width="160" height="60" fill="#fff" stroke="#444" stroke-dasharray="4,3"/>
+  <text x="300" y="195" text-anchor="middle" font-family="Georgia, serif" font-size="12" font-weight="bold">Gold datasets</text>
+  <text x="300" y="212" text-anchor="middle" font-family="Georgia, serif" font-size="10">human-expert annotated</text>
+  <text x="300" y="224" text-anchor="middle" font-family="Georgia, serif" font-size="10">(via AI Reviewer Finder)</text>
+
+  <!-- Canonical graph -->
+  <rect x="220" y="260" width="280" height="60" fill="#fff" stroke="#444"/>
+  <text x="360" y="285" text-anchor="middle" font-family="Georgia, serif" font-size="12" font-weight="bold">Canonical claim–evidence graph</text>
+  <text x="360" y="303" text-anchor="middle" font-family="Georgia, serif" font-size="10">controlled vocabularies, ontologies, Views (on-demand)</text>
+
+  <!-- Customers -->
+  <rect x="540" y="260" width="160" height="60" fill="#fff" stroke="#444"/>
+  <text x="620" y="280" text-anchor="middle" font-family="Georgia, serif" font-size="12" font-weight="bold">Customers</text>
+  <text x="620" y="295" text-anchor="middle" font-family="Georgia, serif" font-size="10">R&amp;D teams · regulators</text>
+  <text x="620" y="308" text-anchor="middle" font-family="Georgia, serif" font-size="10">scientific AI · SciWeave</text>
+
+  <!-- Arrows -->
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#444"/>
+    </marker>
+  </defs>
+  <line x1="150" y1="90" x2="218" y2="90" stroke="#444" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="380" y1="80" x2="448" y2="80" stroke="#444" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="414" y="73" text-anchor="middle" font-family="Georgia, serif" font-size="9">task</text>
+  <line x1="448" y1="105" x2="380" y2="105" stroke="#444" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="414" y="120" text-anchor="middle" font-family="Georgia, serif" font-size="9">ClaimRecords</text>
+  <line x1="300" y1="170" x2="300" y2="142" stroke="#444" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="300" y1="230" x2="300" y2="258" stroke="#444" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="500" y1="290" x2="538" y2="290" stroke="#444" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- Subtensor underlay -->
+  <rect x="20" y="335" width="680" height="18" fill="#eef" stroke="#88a"/>
+  <text x="360" y="349" text-anchor="middle" font-family="Georgia, serif" font-size="10" font-style="italic">Subtensor (Bittensor base chain): hotkeys, weight setting, Yuma consensus, emission</text>
+</svg>
+<figcaption><b>Figure 1.</b> <i>Claims</i> subnet data flow. Validators select source papers from the scientific literature and dispatch a per-paper task to a random subset of miners. Miners return structured ClaimRecords. Validators score the returned records against their reference model and against gold datasets curated with human experts (via the DeSci Labs AI Reviewer Finder<sup>16</sup>), then assemble the canonical claim–evidence graph. Customers query the graph through API / MCP integrations and through the <a href="https://sciweave.com/web" target="_blank" rel="noopener"><i>SciWeave</i></a> application surface. The subnet protocol layer (Subtensor) sees only crypto identities (hotkeys) and the weight vectors that validators submit; end-user identities, customer data, and proprietary ontologies live off-chain.</figcaption>
+</figure>
+
+<h3>4.2 Miners</h3>
+
+<p>A miner is any party that registers on the subnet and runs an extraction pipeline — typically a configured large language model with retrieval, parsing, and entity-normalisation stages, plus any custom logic the miner has developed. Miners do not select what to work on. For each task, a miner receives a task envelope containing:</p>
+
+<ul>
+  <li>the source paper's DOI and accessible text (abstract always, full text when openly accessible),</li>
+  <li>the task family (claim extraction, evidence linking, entity normalisation, or supplementary metadata),</li>
+  <li>the schema version against which output will be scored.</li>
+</ul>
+
+<p>The miner returns a batch of ClaimRecords conforming to the schema. The miner's identity is not consulted: scoring is over the structured output, not over reputation, narrative, or any off-chain signal.</p>
+
+<p><b>Hardware and skill floor.</b> Extraction compute is relatively cheap. For example, open-source LLMs on Chutes can run a paper for cents, and the full literature is single-digit millions of dollars of inference at current prices. The skill floor is given by a sample extraction pipeline that we will share with the miner community on our GitHub repository. The intentional consequence is a low entrance barrier, with higher earning potential for miners with high engineering quality.</p>
+
+<h3>4.3 Validators</h3>
+
+<p>A validator is a party with sufficient stake to be eligible to score miners. Validators perform four bound tasks:</p>
+
+<ol>
+  <li><b>Task selection.</b> Validators choose which papers enter the extraction queue. Choices are not justified or disclosed at the protocol layer. In practice this is the channel through which downstream value enters the subnet: validators preferentially queue recent papers, high-citation papers, papers in domains a paying customer needs, papers triggered by an on-demand query.</li>
+
+  <li><b>Cohort assignment with hidden overlap.</b> For each selected paper, the validator dispatches the extraction task to a random subset of registered miners — for example, a cohort of 10 out of a larger active set. <i>Which</i> miners share a paper is not disclosed to the miners and is reshuffled on a per-paper basis. This is load-bearing: miners cannot identify their direct competitors on any given paper, which removes the equilibrium where a few miners coordinate or copy one another. The subnet still benefits from cross-miner consensus signal because the validator can see the cohort's outputs together.</li>
+
+  <li><b>Scoring against reference and gold.</b> The validator scores each returned ClaimRecord against their reference model on dimensions that include precision, recall, granularity, evidence accuracy, and grounding. The exogenous anchor is a <b>gold dataset</b>: a stratified sample of papers for which human domain experts have manually produced the correct ClaimRecord set, using the same schema as miners. Gold-annotated papers are indistinguishable from normal work when injected into the task stream, and the pool is rotated to prevent memorisation. Gold curation is paid for from the validators' protocol-emission share (§6), with reviewer recruitment routed through the DeSci Labs AI Reviewer Finder<sup>16</sup>, which already matches manuscripts and topic areas to qualified scientific reviewers.</li>
+
+  <li><b>Canonical graph curation.</b> Validators merge accepted miner outputs into a canonical claim–evidence graph: cluster near-duplicate claims across miners by semantic similarity, select the highest-quality version of each, union the evidence records, and link the subject–predicate–object triples to controlled vocabularies and ontologies through on-demand Views. The choice of vocabulary depends on the validator's specialisation and the customer engagements they support. This step is where the Palantir Foundry analogy applies most directly: the ontology layer is co-developed with paying clients in pharma, defense, or economics, and the resulting customer-specific schemas are non-transferable and switching-cost-heavy.</li>
+</ol>
+
+<p><b>Validator specialisation as a feature.</b> Specialization among validators is expected and encouraged. For example, a pharma-focused validator will queue oncology and metabolic-disease papers; defense-focused validators will queue dual-use chemistry and material science; finance-focused validators will queue finance, micro-economics, statistics etc. Validators will also be responsible for curating their own gold-sets to anchor their evaluations. Validators can also develop and apply their own controlled vocabularies and ontologies in collaboration with their own clients, feeding the enriched data back into the <i>Claims</i> database. The shared substrate is the same; the surface area sold to customers differs. This is the structural reason multiple independent validators on <i>Claims</i> are commercially additive rather than redundant.</p>
+
+<h3>4.4 Customers</h3>
+
+<p>The demand side of <i>Claims</i> has three buyers:</p>
+
+<ul>
+  <li><b>R&amp;D teams</b> in pharma, biotech, defense, and other evidence-intensive sectors. Buy: a metered API and MCP server that returns structured ClaimRecords for arbitrary scientific questions; enterprise plans that include a customer-specific ontology layer and validation screens for the failure modes specific to the customer's R&amp;D problem.</li>
+  <li><b>Scientific AI builders</b> wiring grounded reasoning into agentic systems, scientific copilots, regulatory review tools, and literature-summarisation products. Buy: a higher-throughput API tier and tools to filter by evidence type, study design, and replication status.</li>
+  <li><b>Frontier AI labs</b> training the next generation of scientific reasoning models. Buy: licensed access to the structured graph as high-quality, citation-grounded post-training and reinforcement-learning data.</li>
+</ul>
+
+<p><a href="https://sciweave.com/web" target="_blank" rel="noopener"><i>SciWeave</i></a>, the team's existing consumer product, is the primary distribution surface for the free and lower-priced tiers and the natural place to onboard researchers who later become enterprise prospects.</p>
+
+<h2>5. Incentive mechanism</h2>
+
+<div class="placeholder" style="background:#fdecec;">
+<b>[TO CHRISTIAN]</b> This section is the heart of the document and is reserved for the formal incentive-mechanism specification. The current state is summarised below as a brief orientation; the full mechanism design — scoring function, weight aggregation under Yuma, gold-set weighting, anti-gaming defences, and the owner-curator conflict-of-interest resolution — is in active development and will replace this placeholder in lightpaper v0.2.
+<br><br>
+<b>Brief orientation for reviewers.</b> Bittensor's Yuma consensus has no native ground-truth signal: validators submit weight vectors over miners, and miners are paid by the stake-weighted consensus of those weights. The mechanism-design challenge is to anchor miner rewards to actual claim-extraction quality without (a) collapsing onto a single reference LLM, (b) creating a free-rider problem among validators, or (c) requiring the subnet owner to hold a privileged information edge that compromises the open-substrate framing. The current design space combines a precision floor against rotating secret gold datasets, an optional held-out downstream benchmark, and an adversarial-claim-catch mechanism in which miners must distinguish genuine claims from deliberately-injected fakes. Formal specification by Christian is expected in v0.2. See the Validator-Incentive Design Brief (internal) for the full design constraints.
+</div>
+
+<h2>6. Alpha token and value accrual</h2>
+
+<div class="team-note">
+<b class="label">[NOTE TO TEAM — DELETE BEFORE EXTERNAL CIRCULATION]</b><br>
+Under dTAO, the Alpha-token supply schedule and the share of subnet emissions are protocol constants, not parameters a subnet owner sets. The shared emission curve and the AMM that prices Alpha against TAO are common to every subnet. The split of emissions among miners, validators, and owner is fixed at 41 / 41 / 18<sup>17</sup>. No supply table, allocation pie, or vesting cliff is published here, because none would be honoured by the protocol; documents that publish one signal venue-ignorance.
+</div>
+
+<p><b>Demand thesis.</b> Token demand for <i>Claims</i> is anchored to product revenue. The off-chain product layer — API access, MCP integrations, enterprise ontologies, training-data licensing — generates revenue. A specified share of gross product revenue [PLACEHOLDER — percentage to be set in v0.2] is routed into a <b>protocol-level buyback</b> of the <i>Claims</i> Alpha token, automatically staked back into the subnet's AMM pool. Each unit of usage creates a non-speculative demand pulse for the token. This is the pattern Chutes (SN64) has demonstrated at scale<sup>18</sup>.</p>
+
+<p><b>Value loop.</b> High-quality data is the moat. Enterprise customers and metered API / MCP requests surface demand for specific topics and applications, which the validators queue for extraction, score against gold-sets, and enrich with controlled vocabularies and ontologies. Miner output enriches the canonical graph, which raises product quality, which raises usage, which raises revenue, which funds subnet Alpha token buyback, which attracts miners and validators. The on-chain token captures a measurable share of that product's economic surplus.</p>
+
+<div class="placeholder">
+<b>[TO PHILIPP / CHRISTIAN]</b> v0.2 needs: (1) the chosen buyback percentage of gross revenue.
+</div>
+
+<h2>7. Evidence and traction</h2>
+
+<div class="team-note">
+<b class="label">[NOTE TO TEAM — DELETE BEFORE EXTERNAL CIRCULATION]</b><br>
+<i>Claims</i> is pre-launch. The credibility of a pre-launch subnet rests on three substitutes: a prior shipped product with measurable performance; a theory-derived mechanism backed by named expertise; and grounded literature support for the design choices. We carry all three.
+</div>
+
+<h3>7.1 SciWeave: a shipped product, on a published benchmark</h3>
+
+<p><a href="https://sciweave.com/web" target="_blank" rel="noopener"><i>SciWeave</i></a> is a production AI research assistant built by the same team. It is available as a web application (sciweave.com), iOS and Android apps, and an MCP server that plugs into Claude, ChatGPT, Codex, Cursor, Windsurf, and other AI clients. Its retrieval index spans approximately 300 million scientific works via OpenAlex<sup>19</sup>, plus ClinicalTrials.gov, Cochrane, PubMed, NIH Gene, and proteomics databases. Public partnerships with OpenAlex, CrossRef, and ORCID — the three core providers of modern academic infrastructure — are in production.</p>
+
+<p>On the ScholarQABench<sup>1</sup> citation-grounded long-form QA benchmark (100-question random sample, biomedical and neuroscience), <a href="https://sciweave.com/web" target="_blank" rel="noopener"><i>SciWeave</i></a> produced a 0% hallucinated-reference rate; GPT-5.2 hallucinated 59% and Claude Opus 4.6 hallucinated 62%. <a href="https://sciweave.com/web" target="_blank" rel="noopener"><i>SciWeave</i></a> also exceeded both on citation recall and precision while citing more papers per answer (~10 vs ~3.7 and ~7.1). Full methodology, exact commands, and replication scripts are public<sup>3,20</sup>.</p>
+
+<h3>7.2 First commercial pilot in motion</h3>
+
+<p>A privately-held drug-discovery startup is currently building an FDA-relevant decision workflow on top of structured claim-level evidence from <i>Claims</i>-style extractions. A prototype is in active development; first demo to the customer's leadership is pending. Two further enterprise prospects (in biotech and defense R&amp;D) are gated on the first pilot's outcome.</p>
+
+<div class="placeholder">
+<b>[TO PHILIPP]</b> If the pilot LOI signs before circulation, replace the paragraph above with the signed-pilot version: customer name (or anonymised stage descriptor), contract structure, compound class scope, and the specific decision the workflow informs.
+</div>
+
+<h3>7.3 Mechanism design lead</h3>
+
+<p>The validator incentive mechanism is being developed by Prof. Christian Roessler, an economist specialising in game theory and mechanism design (see §8). His published work in <i>Journal of Political Economy</i>, <i>European Economic Review</i>, <i>Economica</i>, <i>Economic Inquiry</i>, and <i>Journal of Mathematical Economics</i> spans collective commitment, regulatory consistency, entrepreneurship and organisation design, and price-increasing competition. The <i>Claims</i> mechanism is one application of a broader theoretical framework he is developing for incentive design on Bittensor — a framework with positive externalities for subnets beyond ours.</p>
+
+<h3>7.4 Literature grounding</h3>
+
+<p>The design choices in this paper are anchored in the recent peer-reviewed literature on hallucination<sup>1,2,5,8,9</sup>, retrieval-augmented generation and its remaining gaps<sup>6,7,10,11,12</sup>, and automated claim extraction and verification<sup>13,14</sup>. The remaining ~50% replication-failure rate of published findings — documented across psychology<sup>21</sup>, biomedicine<sup>22</sup>, and the wider sciences<sup>23,24</sup> — is itself the structural reason the evidence-strength dimension of <i>Claims</i> is necessary: even perfectly extracted claims need calibrated confidence intervals that reflect both extractor variance and source replication status.</p>
+
+<h3>7.5 RFC repository and V1 prototype</h3>
+
+<p>The prototype schema and its supporting documents are tracked on a public RFC repository<sup>25</sup> and are open for review and contribution. A V1 prototype<sup>26</sup> demonstrates the schema in production on three peer-reviewed papers: a <i>Claims Viewer</i> tab surfaces the extracted Paper, Span, Claim, EvidenceItem, and ClaimEvidenceLink objects, and a <i>Graph Query Demos</i> tab walks through Cypher queries against the resulting Neo4j graph — including evidence filtering by study design, ontology-mediated retrieval, and cross-paper queries that surface contradictions and gaps the underlying papers do not state individually. The prototype is small (three papers) but end-to-end, and demonstrates that the schema is implementable today, not aspirational.</p>
+
+<h2>8. Team</h2>
+
+<p><b>Philipp D. Koellinger, PhD</b> — Co-founder and CEO, DeSci Labs. Professor of Economics and Statistical Genetics at the Vrije Universiteit Amsterdam. Founder of consortia that have organised hundreds of senior scientists around large-scale genome-wide association studies in social-science genomics, including the educational-attainment and cognitive-performance work; played a central role in addressing the replication crisis in behavioural genetics and building the data infrastructure for the field. Publications in <i>Nature</i>, <i>Science</i>, <i>Nature Genetics</i>, and adjacent journals.</p>
+
+<p><b>Christian Roessler, PhD</b> — Mechanism-design lead. Associate Professor of Economics and Director (Smith Center for Private Enterprise Studies) at California State University, East Bay; previously Pearson Family Visiting Professor at Brown, Assistant Professor at the University of Vienna, and visiting positions at Rice and Erasmus. PhD, University of Melbourne (Williams Prize for best thesis in the Faculty of Business and Economics, 2010). Published work in <i>Journal of Political Economy</i>, <i>European Economic Review</i>, <i>Economica</i>, <i>Economic Inquiry</i>, <i>Journal of Mathematical Economics</i>, and <i>Economic Record</i> covers collective commitment, distance metrics, regulatory consistency, and competition theory — directly the methodological base required for the <i>Claims</i> incentive mechanism.</p>
+
+<p><b>Sina Iman</b> — Co-founder and CTO, DeSci Labs. Computer scientist (B.Sc. University of Maryland–College Park) with experience across machine learning, blockchain, and high-throughput backend systems. Early career at Palantir (Forward Deployed Engineer, then Software Engineer) where he built a healthcare-fraud-analysis system that surfaced evidence of a $10M insurance-fraud network, and a high-throughput ingestion platform for billions of records; later founded Kryptnostic (zero-knowledge encrypted document search and messaging, $2M seed). Multiple issued U.S. patents in vehicle-information and healthcare-data analytics. At DeSci Labs, leads the engineering team behind the <a href="https://sciweave.com/web" target="_blank" rel="noopener"><i>SciWeave</i></a> product and the <i>Claims</i> engineering effort.</p>
+
+<p><b>Ogban Ugot</b> — Senior backend and machine-learning engineer, DeSci Labs. MSc Computer Science (Distinction), University of Lagos. Production experience with RAG systems over open-source and proprietary LLMs, vector databases, and high-scale backend services (built the Convoy webhooks job-queue, scaling to 50M requests per hour). Microsoft Azure AI Engineer Associate. One of the primary engineers behind <a href="https://sciweave.com/web" target="_blank" rel="noopener"><i>SciWeave</i></a> and the principal author of the preliminary <i>Claims</i> schema.</p>
+
+<div class="placeholder">
+<b>[TO PHILIPP / SINA / OGBAN]</b> Add advisors and key contractors block if appropriate (e.g. cryptography review, biomedical-domain reviewer panel, legal/compliance counsel). v0.2.
+</div>
+
+<h2>9. Risks and limitations</h2>
+
+<div class="placeholder" style="background:#fdecec;">
+<b>[TO CHRISTIAN]</b> Please review Table 3 below and revise as needed — the risk surface and current defences should be consistent with the formal incentive-mechanism specification you produce for §5. Add, remove, or tighten rows as appropriate.
+</div>
+
+<table>
+<caption><b>Table 3.</b> Attack and risk surface, with current defences. Items marked <i>unmitigated</i> are open problems to resolve before mainnet.</caption>
+<thead>
+<tr><th>Risk</th><th>How it would manifest</th><th>Current defence</th></tr>
+</thead>
+<tbody>
+<tr><td>Weight copying / freeloading among validators</td><td>Validator copies the largest validator's scores without doing the work.</td><td>Commit-reveal weights (Bittensor native); validator-quality measurement against gold.</td></tr>
+<tr><td>Collapse onto a reference LLM</td><td>Validators score miners by similarity to one frontier LLM's output; subnet quality caps at that LLM's quality.</td><td>Gold-anchored precision floor; design constraint that the canonical methodology not rely on single-reference comparison. [TO CHRISTIAN — finalise.]</td></tr>
+<tr><td>Miner Sybils / collusion</td><td>One operator runs many miners and games consensus.</td><td>Random cohort assignment per paper; cross-cohort overlap detection; cohort identity hidden from miners (§4.3).</td></tr>
+<tr><td>Fabrication of plausible-sounding claims</td><td>Miner generates ClaimRecords not grounded in the source paper.</td><td>Layer-1 grounding check (passage match against source); hard fail on grounding miss; canary chunks with known-empty correct answer.</td></tr>
+<tr><td>Owner-curator conflict of interest</td><td>Owner controls gold sets and runs a validator — privileged information edge.</td><td>Validators collect their own gold sets, specialize and monetize enriched knowledge graphs directly. [TO CHRISTIAN — finalise governance choice.]</td></tr>
+<tr><td>Intellectual property rights infringement</td><td>Extraction or distribution of ClaimRecords drawn from copyrighted papers exceeds fair-use or licensed-access boundaries; publishers raise infringement claims against miners, validators, or downstream customers.</td><td>Every miner and validator is individually responsible for ensuring their work does not infringe IPR (for example, by signing agreements with publishers covering full-text access). The on-chain protocol does not warrant the copyright status of any paper a validator queues; participants bear their own compliance risk.</td></tr>
+<tr><td>Owner-exit / rug</td><td>Owner liquidates Alpha holdings, drains the AMM pool, abandons the subnet.</td><td>Conviction governance upgrade makes owner exits public on-chain events; named accountable founding team; the off-chain commercial business is a larger value pool than any liquidation. <i>Residual risk: not fully mitigated by mechanism alone.</i></td></tr>
+<tr><td>Liquidity / slippage on the Alpha pool</td><td>Subnet Alpha pools can be thin (&lt;$1M); large entries or exits face severe slippage.</td><td>Disclosed as a property of the venue, not a fixable subnet parameter.</td></tr>
+<tr><td>TAO-price beta</td><td>Alpha trades against TAO; a TAO crash compresses the subnet's nominal economics.</td><td>Diversified revenue in fiat from the off-chain product layer is the structural hedge.</td></tr>
+<tr><td>Demand concentration</td><td>A single enterprise customer becomes a large share of revenue.</td><td>Multi-vertical strategy (pharma + biotech + defense + AI labs); free tier and metered API tier maintain breadth.</td></tr>
+<tr><td>Key-person risk</td><td>Loss of any founder materially impairs the project.</td><td>Hiring plan in v0.2; advisor expansion (§8 placeholder).</td></tr>
+<tr><td>Regulatory exposure</td><td>Pharma / defense / regulatory customers impose data-handling, audit, or export-control requirements.</td><td>On-chain data layer holds no end-user identities or direct requests, all source data is in the public domain (§4.1).</td></tr>
+<tr><td>Competitive replication</td><td>An incumbent (Elsevier, Semantic Scholar, a frontier lab) launches a competing structured claims product.</td><td>Incentive mechanism and diversity of independent extractors raise data quality; customer-specific ontologies create switching cost.</td></tr>
+</tbody>
+</table>
+
+<h2>10. Roadmap</h2>
+
+<p><b>Phase 1 — Centralised prototype (now → fall 2026).</b> Build the customer-facing extraction-and-validation pipeline in-house. Sign the first paid R&amp;D pilot. Prove that the prototype beats the customer's internal manual baseline on a head-to-head evidence-synthesis benchmark.</p>
+
+<p><b>Phase 2 — Subnet launch (winter 2026).</b> Register the <i>Claims</i> subnet on Bittensor. Migrate the extraction and validation layer to miners and independent validators. Operate the reference validator and miner. Open-source the miner reference implementation; keep the off-chain validator stack and the proprietary screening / ontology layers private. Onboard the first wave of independent miners and at least one independent validator.</p>
+
+<p><b>Phase 3 — Platform (2027+).</b> Expand beyond biomedicine to additional sciences. Onboard the second and third enterprise customers on customer-specific ontologies. Engage the protocol-level revenue buyback for subnet Alpha tokens.</p>
+
+<h2>11. Conclusion</h2>
+
+<p>Frontier AI fabricates scientific citations. RAG systems eliminate fabrication but do not produce the structured layer that high-stakes scientific decisions require. The next reliability axis is structure: claims as atomic objects, evidence as quantitative records, provenance as a first-class field, contradiction preserved rather than averaged away. <i>Claims</i> produces that substrate as the output of an open market in extraction quality on Bittensor, sells access through a freemium product layer modelled on the Palantir Foundry pattern, and routes revenue back into the Alpha pool through protocol-level buyback. The team built the consumer product that proved the underlying retrieval pipeline works. The mechanism-design lead is in place to specify the incentive layer that turns the open market into a quality-compounding substrate. The first commercial pilot is in motion.</p>
+
+<h2>Appendix 1 — Prototype Claim Graph Schema</h2>
+
+<p>This appendix reproduces the current prototype schema. It is preliminary and subject to revision; the canonical version lives in the public RFC repository<sup>25</sup>, and a V1 implementation is queryable at the prototype URL<sup>26</sup>.</p>
+
+<h3>A1.1 Design principles</h3>
+
+<p><b>Stable base objects.</b> The prototype keeps a small fixed set of top-level objects: <code>Paper</code>, <code>Span</code>, <code>Claim</code>, <code>EvidenceItem</code>, <code>ClaimEvidenceLink</code>. Optional supporting objects: <code>Entity</code>, <code>OntologyAnnotation</code>.</p>
+
+<p><b>Uniform ontology enhancement.</b> Any field whose value benefits from semantic normalisation is wrapped in the same <code>SemanticField</code> structure, which carries a raw value, an entity type, and an <code>OntologyAnnotation</code> block (candidate mappings, selected mapping, mapping status, mapping method). The same shape is reused everywhere; there are no field-specific wrappers.</p>
+
+<p><b>Extensibility in two places.</b> The model grows through <code>context</code> (qualifiers and applicability conditions) and <code>details</code> (type-specific structured payloads). New domains are accommodated by <i>profiles</i> that define which keys are expected for a given evidence method or outcome type — no new top-level objects required. This prevents schema sprawl while still allowing rich domain coverage.</p>
+
+<h3>A1.2 Object model</h3>
+
+<h4>A1.2.1 <code>Paper</code></h4>
+<p>The source document or source artefact. Identifies the source and stores high-level bibliographic metadata; parent object for claims and spans.</p>
+<pre>{
+  "paper_id": "paper_123",
+  "doi": "10.1234/example",
+  "pmid": "12345678",
+  "title": "Example Paper",
+  "authors": ["A. Smith", "B. Jones"],
+  "journal": "Journal Name",
+  "year": 2026,
+  "source_type": "journal_article",
+  "open_access": true
+}</pre>
+
+<h4>A1.2.2 <code>Span</code></h4>
+<p>A precise source anchor from the paper. Anchors a claim or evidence item to exact source text; can also represent table, figure, or caption anchors; carries the provenance needed for export and verification.</p>
+<pre>{
+  "span_id": "span_45",
+  "paper_id": "paper_123",
+  "section_type": "RESULTS",
+  "section_name": "Primary outcome",
+  "page": 7,
+  "char_start": 18452,
+  "char_end": 18527,
+  "text": "Mean anxiety score decreased by 3.1 points (95% CI -5.4 to -0.8, p=0.01, n=184).",
+  "table_id": null,
+  "figure_id": null,
+  "caption_id": null
+}</pre>
+
+<h4>A1.2.3 <code>OntologyAnnotation</code></h4>
+<p>The uniform structure used inside any <code>.ontology</code> subfield. Stores ontology enhancement in one consistent shape; supports successful mappings and unresolved cases; can be used for concepts, qualifiers, and evidence-level classification.</p>
+<pre>{
+  "annotation_type": "mapping",
+  "raw_text": "5-HT1A",
+  "normalized_text": "5-HT1A receptor",
+  "mapping_status": "mapped",
+  "candidate_mappings": [
+    {
+      "ontology_source": "CustomReceptorOntology",
+      "ontology_id": "REC:5HT1A",
+      "ontology_label": "5-hydroxytryptamine receptor 1A",
+      "match_type": "exact",
+      "confidence": 0.94
+    }
+  ],
+  "selected_mapping": {
+    "ontology_source": "CustomReceptorOntology",
+    "ontology_id": "REC:5HT1A",
+    "ontology_label": "5-hydroxytryptamine receptor 1A"
+  },
+  "mapping_method": "dictionary_plus_context"
+}</pre>
+<p>Field meanings: <code>annotation_type</code> = <i>mapping</i> | <i>classification</i>; <code>mapping_status</code> = <i>mapped</i> | <i>ambiguous</i> | <i>unresolved</i> | <i>rejected</i>; <code>candidate_mappings</code> = ranked ontology candidates; <code>selected_mapping</code> = chosen concept if available.</p>
+
+<h4>A1.2.4 <code>SemanticField</code></h4>
+<p>A reusable wrapper for any concept-like field. Keeps raw value and ontology enhancement separate; should be used wherever a field may need semantic normalisation. Recommended usage: <code>Claim.subject</code>, <code>Claim.object</code>, <code>Claim.context.*</code>, <code>EvidenceItem.context.*</code>, concept-like fields inside <code>details</code>.</p>
+<pre>{
+  "value": "Psilocybin",
+  "entity_type": "chemical",
+  "ontology": {
+    "annotation_type": "mapping",
+    "raw_text": "Psilocybin",
+    "normalized_text": "psilocybin",
+    "mapping_status": "mapped",
+    "candidate_mappings": [
+      {
+        "ontology_source": "ChEBI",
+        "ontology_id": "CHEBI:0000",
+        "ontology_label": "Psilocybin",
+        "match_type": "exact",
+        "confidence": 0.99
+      }
+    ],
+    "selected_mapping": {
+      "ontology_source": "ChEBI",
+      "ontology_id": "CHEBI:0000",
+      "ontology_label": "Psilocybin"
+    },
+    "mapping_method": "dictionary_plus_context"
+  }
+}</pre>
+
+<h4>A1.2.5 <code>Claim</code></h4>
+<p>A paper-specific assertion with a queryable subject–predicate–object core plus epistemic metadata. Contains the main proposition the system should reason over; keeps SPO explicit but not as the entire data model; uses <code>context</code> for applicability qualifiers; leaves <code>details</code> available for claim-specific structured extensions.</p>
+<pre>{
+  "claim_id": "claim_1",
+  "paper_id": "paper_123",
+  "claim_text": "Psilocybin reduced anxiety symptoms in treatment-resistant adults.",
+  "subject": { /* SemanticField — see A1.2.4 */ },
+  "predicate": { /* SemanticField */ },
+  "object": { /* SemanticField */ },
+  "claim_kind": "result",
+  "epistemic_status": "empirical",
+  "support_origin": "own_results",
+  "source_span_ids": ["span_44"],
+  "context": {
+    "population": { /* SemanticField */ }
+  },
+  "details": {},
+  "extractor_confidence": 0.81
+}</pre>
+<p>Field meanings: <code>claim_kind</code> = <i>result</i> | <i>background</i> | <i>hypothesis</i> | <i>method</i> | <i>interpretation</i> | <i>causal</i> | <i>correlational</i> | <i>descriptive</i>; <code>epistemic_status</code> = <i>empirical</i> | <i>conjectural</i> | <i>theoretical</i> | <i>cited</i> | <i>inferred</i> | <i>mixed</i>; <code>support_origin</code> = <i>own_results</i> | <i>cited_results</i> | <i>background</i> | <i>methodological</i> | <i>speculative</i>.</p>
+
+<h4>A1.2.6 <code>EvidenceItem</code></h4>
+<p>A first-class evidence object that supports, qualifies, or contradicts a claim. Stores queryable support (not loose evidence sentences); separates the HOW, the WHAT, and the presentation format; uses <code>context</code> for evidence qualifiers (species, population, assay type, dose, comparator); uses <code>details</code> for type-specific structure; uses top-level <code>ontology</code> for classification of the evidence item as a whole.</p>
+<pre>{
+  "evidence_id": "ev_1",
+  "paper_id": "paper_123",
+  "role": "supports",
+  "summary_text": "Mean anxiety score decreased by 3.1 points (95% CI -5.4 to -0.8, p=0.01, n=184).",
+  "evidence_method": { "value": "randomized_controlled_trial",
+                       "entity_type": "evidence_method", "ontology": null },
+  "outcome_type":    { "value": "clinical_outcome",
+                       "entity_type": "outcome_type", "ontology": null },
+  "presentation_type": { "value": "table",
+                         "entity_type": "presentation_type", "ontology": null },
+  "source_span_ids": ["span_45"],
+  "context": {
+    "population": { /* SemanticField */ },
+    "species":    { /* SemanticField → NCBITaxon:9606 */ }
+  },
+  "details": {
+    "outcome_name": "anxiety score",
+    "effect_size":  -3.1,
+    "unit":         "scale points",
+    "ci_low":       -5.4,
+    "ci_high":      -0.8,
+    "p_value":      0.01,
+    "sample_size":  184
+  },
+  "ontology": { /* OntologyAnnotation — top-level classification of the evidence item */ }
+}</pre>
+<p>Field meanings: <code>evidence_method</code> — <i>randomized_controlled_trial</i>, <i>laboratory_experiment</i>, <i>regression_estimate</i>, <i>observation</i>, <i>simulation</i>, <i>meta_analysis</i>, <i>theoretical_argument</i>, <i>mathematical_derivation</i>. <code>outcome_type</code> — <i>clinical_outcome</i>, <i>molecular_binding</i>, <i>gene_expression</i>, <i>physiological_measure</i>, <i>adverse_event</i>. <code>presentation_type</code> — <i>text</i>, <i>table</i>, <i>figure</i>, <i>caption</i>, <i>supplement</i>. <code>role</code> — <i>supports</i>, <i>contradicts</i>, <i>qualifies</i>, <i>backgrounds</i>.</p>
+
+<h4>A1.2.7 <code>ClaimEvidenceLink</code></h4>
+<p>The explicit relation between a claim and an evidence item. Keeps claim/evidence linkage explicit; allows one evidence item to relate to many claims and one claim to be backed by many evidence items.</p>
+<pre>{
+  "link_id": "link_1",
+  "claim_id": "claim_1",
+  "evidence_id": "ev_1",
+  "relation": "supports",
+  "confidence": 0.92
+}</pre>
+
+<h3>A1.3 Profiles</h3>
+
+<p>Profiles define the expected shape of <code>context</code> and <code>details</code> without changing the core schema. The base object model stays fixed; profiles only say which keys are relevant for a given use case.</p>
+
+<h4>A1.3.1 Claim profile (recommended default)</h4>
+<pre>{
+  "allowed_context_keys": ["population", "species", "setting", "timepoint", "comparator"],
+  "allowed_details_keys": []
+}</pre>
+<p>Claims usually need only lightweight qualifiers; most heavy structured data lives in evidence.</p>
+
+<h4>A1.3.2 Evidence-method profiles</h4>
+
+<p><b>Randomized controlled trial:</b></p>
+<pre>{
+  "evidence_method": "randomized_controlled_trial",
+  "allowed_context_keys": ["population", "species", "setting", "dose", "timepoint", "comparator"],
+  "allowed_details_keys": ["outcome_name", "effect_size", "unit", "ci_low", "ci_high", "p_value", "sample_size"]
+}</pre>
+
+<p><b>Laboratory experiment:</b></p>
+<pre>{
+  "evidence_method": "laboratory_experiment",
+  "allowed_context_keys": ["species", "assay_type", "dose", "timepoint", "temperature", "ph"],
+  "allowed_details_keys": ["measurement_type", "outcome_name", "value", "unit", "ci_low", "ci_high", "sample_size", "target"]
+}</pre>
+
+<p><b>Meta-analysis:</b></p>
+<pre>{
+  "evidence_method": "meta_analysis",
+  "allowed_context_keys": ["population", "species", "setting"],
+  "allowed_details_keys": ["outcome_name", "effect_size", "unit", "ci_low", "ci_high", "p_value", "study_count", "sample_size"]
+}</pre>
+
+<h4>A1.3.3 Outcome-type profiles</h4>
+<p>Examples: <code>clinical_outcome</code> — observed clinical endpoint, symptom score, or patient outcome. <code>molecular_binding</code> — binding affinity, receptor activation, or related molecular readout.</p>
+
+<h4>A1.3.4 Presentation-type profiles</h4>
+<p>Examples: <code>table</code> — evidence primarily presented in a table; <code>text</code> — evidence primarily described in narrative prose.</p>
+
+<h3>A1.4 Graph translation</h3>
+
+<p>The object model maps naturally to a property graph (e.g., Neo4j):</p>
+
+<pre>(Paper)-[:HAS_SPAN]-&gt;(Span)
+(Paper)-[:HAS_CLAIM]-&gt;(Claim)
+(Claim)-[:HAS_SUBJECT]-&gt;(Entity)
+(Claim)-[:HAS_OBJECT]-&gt;(Entity)
+(Claim)-[:SUPPORTED_BY]-&gt;(EvidenceItem)
+(EvidenceItem)-[:ANCHORED_IN]-&gt;(Span)</pre>
+
+<p>Claims are nodes (not edges) because they carry metadata, provenance, and many evidence links. Subjects and objects can be stored as <code>Entity</code> nodes or flattened into claim fields in simpler prototypes. Most structured metadata can remain node properties rather than exploding into many small graph nodes. The V1 prototype<sup>26</sup> exposes Cypher query examples that exercise this shape.</p>
+
+<h3>A1.5 Implementation contract for miners</h3>
+
+<p>Miners should be able to populate the schema in layers:</p>
+
+<p><b>Minimum useful output:</b> Paper, Span, Claim, EvidenceItem, ClaimEvidenceLink.</p>
+<p><b>Better output:</b> populate <code>context</code> and <code>details</code>; populate <code>.ontology</code> where confidence is high.</p>
+<p><b>Best output:</b> include candidate mappings when ontology is ambiguous; classify the evidence item ontology against ECO or a similar vocabulary; normalise predicates consistently.</p>
+
+<h3>A1.6 What this schema intentionally does not do</h3>
+
+<ul>
+  <li>It does not force everything into flat SPO triples.</li>
+  <li>It does not require perfect ontology resolution before extraction is useful.</li>
+  <li>It does not force every evidence subtype into a new top-level object.</li>
+  <li>It does not require every structured field to become its own graph node.</li>
+</ul>
+
+<p><b>Bottom line.</b> Stable base objects; one reusable <code>SemanticField</code> pattern; one reusable <code>OntologyAnnotation</code> pattern; extensibility through <code>context</code> and <code>details</code>; graph shape built around <code>Claim</code> and <code>EvidenceItem</code> rather than raw triples. That gives the prototype a simple present-day structure without boxing it out of future ontology-aware querying.</p>
+
+<h2 class="refs">References</h2>
+
+<div class="refs">
+<ol>
+<li>Asai, A. <i>et al.</i> Synthesizing scientific literature with retrieval-augmented language models. <i>Nature</i> (2026). <a href="https://doi.org/10.1038/s41586-025-10072-4">https://doi.org/10.1038/s41586-025-10072-4</a></li>
+<li>Manley, K. <i>et al.</i> Using ChatGPT to write a literature review on autologous fat grafting. <i>J. Plast. Reconstr. Aesthet. Surg.</i> <b>105</b>, 292–304 (2025). <a href="https://doi.org/10.1016/j.bjps.2025.04.015">https://doi.org/10.1016/j.bjps.2025.04.015</a></li>
+<li>Koellinger, P. Zero hallucinated citations: <i>SciWeave's</i> ScholarQABench results. <i>SciWeave blog</i> (2026). <a href="https://sciweave.com/blog/zero-hallucinated-citations-scholarqabench-results">https://sciweave.com/blog/zero-hallucinated-citations-scholarqabench-results</a></li>
+<li>World Intellectual Property Organization. <i>Global Innovation Index 2025 — end-of-year edition</i> (WIPO, 2025). <a href="https://www.wipo.int/en/web/global-innovation-index/w/blogs/2025/end-of-year-edition">https://www.wipo.int/en/web/global-innovation-index/w/blogs/2025/end-of-year-edition</a></li>
+<li>Wilder, E. I. &amp; Walters, W. H. Fabrication and errors in the bibliographic citations generated by ChatGPT. <i>Sci. Rep.</i> <b>13</b>, 14045 (2023). <a href="https://doi.org/10.1038/s41598-023-41032-5">https://doi.org/10.1038/s41598-023-41032-5</a></li>
+<li>Gupta, S. Retrieval-augmented generation and hallucination in large language models: a scholarly overview. <i>Sch. J. Eng. Technol.</i> <b>13</b>(5) (2025). <a href="https://doi.org/10.36347/sjet.2025.v13i05.003">https://doi.org/10.36347/sjet.2025.v13i05.003</a></li>
+<li>Zhao, Y. <i>et al.</i> Siren's song in the AI ocean: a survey on hallucination in large language models. <i>Comput. Linguist.</i> (2025). <a href="https://doi.org/10.1162/coli.a.16">https://doi.org/10.1162/coli.a.16</a></li>
+<li>Glynn, D. Guarding against AI-hallucinated citations: the case for full-text reference deposit. <i>Eur. Sci. Ed.</i> (2025). <a href="https://doi.org/10.3897/ese.2025.e153973">https://doi.org/10.3897/ese.2025.e153973</a></li>
+<li>Pellegrina, L. &amp; Helmy, M. AI for scientific integrity: detecting ethical breaches, errors, and misconduct in manuscripts. <i>Front. Artif. Intell.</i> <b>8</b>, 1644098 (2025). <a href="https://doi.org/10.3389/frai.2025.1644098">https://doi.org/10.3389/frai.2025.1644098</a></li>
+<li>Li, M. <i>et al.</i> Benchmarking retrieval-augmented large language models in biomedical NLP: application, robustness, and self-awareness. <i>Sci. Adv.</i> <b>11</b>(47), eadr1443 (2025). <a href="https://doi.org/10.1126/sciadv.adr1443">https://doi.org/10.1126/sciadv.adr1443</a></li>
+<li>Hou, Y., Bishop, J. R., Liu, H. &amp; Zhang, R. Improving dietary supplement information retrieval: development of a retrieval-augmented generation system with large language models. <i>J. Med. Internet Res.</i> <b>27</b>, e67677 (2025). <a href="https://doi.org/10.2196/67677">https://doi.org/10.2196/67677</a></li>
+<li>Joy, J. &amp; Su, A. I. Federated knowledge retrieval elevates large language model performance on biomedical benchmarks. <i>bioRxiv</i> (2025). <a href="https://doi.org/10.1101/2025.08.01.668022">https://doi.org/10.1101/2025.08.01.668022</a></li>
+<li>Edelman, B. &amp; Skolnick, J. Valsci: an open-source, self-hostable literature review utility for automated large-batch scientific claim verification using large language models. <i>BMC Bioinformatics</i> <b>26</b>, 140 (2025). <a href="https://doi.org/10.1186/s12859-025-06159-4">https://doi.org/10.1186/s12859-025-06159-4</a></li>
+<li>Wu, S. <i>et al.</i> Automated literature research and review-generation method based on large language models. <i>Natl. Sci. Rev.</i> <b>12</b>(6), nwaf169 (2025). <a href="https://doi.org/10.1093/nsr/nwaf169">https://doi.org/10.1093/nsr/nwaf169</a></li>
+<li>Hanlon, P. <i>et al.</i> Age and Sex Differences in Efficacy of Treatments for Type 2 Diabetes: A Network Meta-Analysis. <i>JAMA</i> <b>333</b>(12), 1062–1073 (2025). <a href="https://doi.org/10.1001/jama.2024.27402">https://doi.org/10.1001/jama.2024.27402</a></li>
+<li>DeSci Labs. AI Reviewer Finder. <a href="https://www.desci.com/products/ai-reviewer-finder">https://www.desci.com/products/ai-reviewer-finder</a></li>
+<li>Bittensor. Emissions documentation. <a href="https://docs.learnbittensor.org/learn/emissions">https://docs.learnbittensor.org/learn/emissions</a></li>
+<li>Chutes (SN64) — Bittensor subnet overview and revenue-buyback documentation. <a href="https://subnetalpha.ai/subnet/chutes/" target="_blank" rel="noopener">https://subnetalpha.ai/subnet/chutes/</a></li>
+<li>Priem, J., Piwowar, H. &amp; Orr, R. OpenAlex: a fully-open index of scholarly works, authors, venues, institutions, and concepts. <i>arXiv</i> 2205.01833 (2022). <a href="https://arxiv.org/abs/2205.01833">https://arxiv.org/abs/2205.01833</a> 
+<li>DeSci Labs. <i>SciWeave</i>-ScholarQABench replication scripts. <a href="https://github.com/desci-labs/sciweave-scholarqabench">https://github.com/desci-labs/sciweave-scholarqabench</a></li>
+<li>Open Science Collaboration. Estimating the reproducibility of psychological science. <i>Science</i> <b>349</b>, aac4716 (2015). <a href="https://doi.org/10.1126/science.aac4716">https://doi.org/10.1126/science.aac4716</a></li>
+<li>Prinz, F., Schlange, T. &amp; Asadullah, K. Believe it or not: how much can we rely on published data on potential drug targets? <i>Nat. Rev. Drug Discov.</i> <b>10</b>, 712 (2011). <a href="https://doi.org/10.1038/nrd3439-c1">https://doi.org/10.1038/nrd3439-c1</a></li>
+<li>Baker, M. 1,500 scientists lift the lid on reproducibility. <i>Nature</i> <b>533</b>, 452–454 (2016). <a href="https://doi.org/10.1038/533452a">https://doi.org/10.1038/533452a</a></li>
+<li>Ioannidis, J. P. A. Why most published research findings are false. <i>PLoS Med.</i> <b>2</b>(8), e124 (2005). <a href="https://doi.org/10.1371/journal.pmed.0020124">https://doi.org/10.1371/journal.pmed.0020124</a></li>
+<li>DeSci Labs. <i>Claims</i> Subnet RFC — public repository for the prototype schema and supporting documents. <a href="https://github.com/desci-labs/claims-subnet-rfc" target="_blank" rel="noopener">https://github.com/desci-labs/claims-subnet-rfc</a></li>
+<li>DeSci Labs. <i>Claims</i> V1 prototype — Claims Viewer (extracted claims from three peer-reviewed papers) and Graph Query Demos (Cypher queries against the resulting Neo4j graph). <a href="http://alexandria.desci.com:8502/" target="_blank" rel="noopener">http://alexandria.desci.com:8502/</a></li>
+</ol>
+</div>
+
+<p class="meta" style="margin-top:2em; border-top:1px solid #ccc; padding-top:0.8em;"><b>Document status.</b> Draft v0.1, 22 May 2026. Co-author review version. Visible <code>[TO …]</code> tags mark items requiring co-author input or verification before any external circulation. Blue-bordered <i>Note to team</i> blocks are scratchpad text to be deleted before circulation outside the author group. Numbered references follow the <i>Nature</i> end-note format; all DOIs are direct links. HTML markup is intentionally minimal so the file converts cleanly to LaTeX (Pandoc <code>html → tex</code>); Figure 1 SVG can be replaced with a TikZ equivalent on conversion.</p>
+
+</body>
+</html>

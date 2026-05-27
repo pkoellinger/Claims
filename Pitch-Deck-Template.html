@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pitch Deck Template — Design System Preview</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+/* ======================================================================
+   DESIGN TOKENS  (from Deck Design Spec v5 · May 2026)
+   ====================================================================== */
+:root {
+  /* Color */
+  --color-ink:        #0B1220;
+  --color-paper:      #FFFFFF;
+  --color-parchment:  #F7F5F0;
+  --color-fog:        #E7EAEF;
+  --color-graphite:   #4A5160;
+  --color-mist:       #B5BAC4;
+  --color-claims-blue: #2D4F8E;
+  --color-atmosphere: #8FA4C4;
+  --color-copper:     #B87333;
+  --color-moss:       #3C6E47;
+  --color-signal:     #C8451A;
+
+  /* Spacing scale (slide-native pt) */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --space-4xl: 96px;
+
+  /* Grid (native 1920×1080) */
+  --stage-w: 1920px;
+  --stage-h: 1080px;
+  --edge-band-w: 64px;
+  --safe-left: 128px;
+  --safe-right: 80px;
+  --safe-top: 72px;
+  --safe-bottom: 56px;
+  --col-w: 123px;
+  --col-gutter: 24px;
+
+  /* Lines / radii */
+  --stroke-hairline: 0.5px;
+  --stroke-rule: 1px;
+  --stroke-heavy: 2px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+
+  /* Type families */
+  --font-family: "Inter", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+}
+
+/* ======================================================================
+   RESET & PAGE FRAME
+   ====================================================================== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%;
+  background: #2a2a2a;
+  font-family: var(--font-family);
+  color: var(--color-ink);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ======================================================================
+   SLIDE STAGE — designed at native 1920×1080, scaled via JS
+   ====================================================================== */
+.stage-wrap {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stage {
+  position: relative;
+  width: var(--stage-w);
+  height: var(--stage-h);
+  transform-origin: center center;
+}
+.slide {
+  position: absolute;
+  inset: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  display: none;
+  font-feature-settings: "ss01", "cv11";
+}
+.slide.active { display: block; }
+
+/* Left-edge ink band — fixed on every content slide */
+.slide::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0;
+  width: var(--edge-band-w);
+  height: 100%;
+  background: var(--color-ink);
+  z-index: 2;
+}
+.slide.no-band::before { display: none; }
+/* Cover + closing: image is the band — suppress the solid bar */
+.slide.cover::before,
+.slide.closing::before { display: none; }
+.slide.divider::before { /* still rendered, just contextual */ }
+
+/* ======================================================================
+   TYPE SCALE (native-px values per §2.2)
+   ====================================================================== */
+.t-display-xl { font: 300 220px/1 var(--font-family); letter-spacing: -0.035em; font-variant-numeric: tabular-nums; }
+.t-display    { font: 300 200px/1 var(--font-family); letter-spacing: -0.02em;  font-variant-numeric: tabular-nums; }
+.t-title-xl   { font: 300 112px/1.05 var(--font-family); letter-spacing: -0.015em; }
+.t-title-lg   { font: 300 84px/1.1  var(--font-family); letter-spacing: -0.01em; }
+.t-title      { font: 400 56px/1.15 var(--font-family); letter-spacing: -0.005em; }
+.t-subtitle   { font: 400 36px/1.25 var(--font-family); }
+.t-body       { font: 400 32px/1.4  var(--font-family); }
+.t-body-sm    { font: 400 24px/1.4  var(--font-family); }
+.t-meta       { font: 500 18px/1.2  var(--font-family); letter-spacing: 0.14em; text-transform: uppercase; }
+.t-counter    { font: 400 18px/1.2  var(--font-family); letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+.t-hero-num   { font: 300 180px/1   var(--font-family); letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
+
+/* ======================================================================
+   PERSISTENT FRAME ELEMENTS (footer)
+   ====================================================================== */
+.slide-title {
+  position: absolute;
+  left: var(--safe-left);
+  top: 128px;
+  right: var(--safe-right);
+  color: var(--color-ink);
+}
+.content {
+  position: absolute;
+  left: var(--safe-left);
+  top: calc(128px + 56px + var(--space-3xl));
+  right: var(--safe-right);
+  bottom: 96px;
+}
+.footer-tab {
+  position: absolute;
+  left: var(--safe-left);
+  bottom: var(--safe-bottom);
+  color: var(--color-graphite);
+}
+.footer-page {
+  position: absolute;
+  left: 50%;
+  bottom: var(--safe-bottom);
+  transform: translateX(-50%);
+  color: var(--color-mist);
+}
+.footer-logo {
+  position: absolute;
+  right: var(--safe-right);
+  bottom: var(--safe-bottom);
+  color: var(--color-ink);
+  display: flex;
+  align-items: center;
+}
+.footer-logo .wordmark {
+  font: 500 22px/1 var(--font-family);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* ======================================================================
+   ARCHETYPE — COVER (§4.1)
+   ====================================================================== */
+.slide.cover {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  overflow: hidden;
+}
+.cover .hero-art {
+  position: absolute;
+  inset: 0;
+  background-image: url("Logos and pictures/cover-art.jpg");
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-color: var(--color-ink); /* fallback while image loads */
+  z-index: 0;
+}
+.cover .overlay {
+  position: absolute;
+  inset: 0;
+  /* All text now lives in the bottom band — title, subtitle (left), eyebrow (right).
+     A single strong linear gradient gives that band reliable contrast.
+     The dome and upper image are deliberately left clear. */
+  background: linear-gradient(180deg, transparent 50%, rgba(11,18,32,0.45) 72%, rgba(11,18,32,0.85) 100%);
+  z-index: 1;
+}
+/* Title block anchored to the bottom — sits beneath the dome
+   where the overlay creates a high-contrast band */
+.cover-text {
+  position: absolute;
+  left: 160px;
+  right: 160px;
+  bottom: 100px;
+  z-index: 3;
+  color: var(--color-paper);
+}
+.cover-title {
+  color: var(--color-paper);
+  margin-bottom: var(--space-lg);
+}
+/* Footer row: subtitle on the left (aligned with title), eyebrow on the right.
+   align-items: baseline lines up the two text baselines despite size differences. */
+.cover-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2xl);
+}
+.cover-date {
+  color: var(--color-mist);
+  font: 400 22px/1 var(--font-family);
+}
+.cover-eyebrow {
+  color: var(--color-mist);
+  /* type.meta inherited from .t-meta utility class on the element */
+}
+/* Cover and closing slides intentionally have no CLAIMS wordmark.
+   The hero image is the lockup. */
+
+/* ======================================================================
+   ARCHETYPE — SECTION DIVIDER (§5.3 referenced)
+   ====================================================================== */
+.slide.divider {
+  background: var(--color-parchment);
+}
+.divider-number {
+  position: absolute;
+  left: 160px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-ink);
+}
+.divider-title {
+  position: absolute;
+  left: 160px;
+  top: calc(50% + 160px);
+  color: var(--color-graphite);
+}
+.divider-eyebrow {
+  position: absolute;
+  left: 160px;
+  top: calc(50% - 220px);
+  color: var(--color-graphite);
+}
+
+/* ======================================================================
+   ARCHETYPE — HERO STAT (§4.4)
+   ====================================================================== */
+.hero-context {
+  color: var(--color-graphite);
+  font: 500 22px/1.2 var(--font-family);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-2xl);
+}
+.hero-numeral {
+  color: var(--color-ink);
+  margin: 0;
+}
+.hero-support {
+  color: var(--color-graphite);
+  margin-top: var(--space-2xl);
+  font: 300 48px/1.25 var(--font-family);
+  letter-spacing: -0.005em;
+  max-width: 1700px;
+}
+/* Use <span class="line"> blocks inside .hero-support to force per-line breaks
+   instead of relying on natural CSS wrap (which violates spec §0 rule 1). */
+.hero-support .line {
+  display: block;
+}
+
+/* ======================================================================
+   ARCHETYPE — SHORT LIST (§4.5a)
+   ====================================================================== */
+.short-list {
+  list-style: none;
+  max-width: calc(8 * var(--col-w) + 7 * var(--col-gutter));
+}
+.short-list li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xl);
+  padding: 20px 0;
+  font: 400 32px/1.35 var(--font-family);
+  color: var(--color-ink);
+}
+.short-list li .rule {
+  flex: 0 0 32px;
+  height: 1px;
+  background: var(--color-graphite);
+  position: relative;
+  top: -10px;
+}
+.short-list li .micro-stat {
+  margin-left: auto;
+  font: 300 56px/1 var(--font-family);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+  letter-spacing: -0.01em;
+}
+.short-list .accent { color: var(--color-copper); }
+.short-list em { font-style: italic; font-weight: 400; }
+
+/* ======================================================================
+   ARCHETYPE — METRIC TILE ROW (§4.5b)
+   ====================================================================== */
+.tile-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2xl);
+  align-self: center;
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+}
+.tile .tile-rule {
+  height: 2px;
+  background: var(--color-ink);
+  margin-bottom: var(--space-md);
+}
+.tile .tile-numeral {
+  font: 300 96px/1 var(--font-family);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+.tile .tile-label {
+  font: 400 22px/1.3 var(--font-family);
+  color: var(--color-graphite);
+  margin-top: var(--space-md);
+}
+.tile .tile-delta {
+  font: 500 20px/1.2 var(--font-family);
+  margin-top: var(--space-sm);
+  letter-spacing: 0.02em;
+}
+.tile .tile-delta.pos { color: var(--color-moss); }
+.tile .tile-delta.neg { color: var(--color-signal); }
+.tile .tile-delta.neu { color: var(--color-graphite); }
+
+/* ======================================================================
+   ARCHETYPE — TABLE (§4.6)
+   ====================================================================== */
+.research-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 400 22px/1.4 var(--font-family);
+  color: var(--color-ink);
+}
+.research-table thead th {
+  font-weight: 500;
+  text-align: left;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 2px solid var(--color-ink);
+}
+.research-table tbody td {
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 0.5px solid var(--color-mist);
+}
+.research-table tfoot td {
+  border-top: 1px solid var(--color-ink);
+}
+.research-table td.num,
+.research-table th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+.research-table tr.emphasis {
+  background: var(--color-fog);
+}
+
+/* ======================================================================
+   ARCHETYPE — CHARTS (§4.7–4.9) — inline SVG
+   ====================================================================== */
+.chart-title {
+  font: 400 36px/1.2 var(--font-family);
+  color: var(--color-ink);
+  margin-bottom: var(--space-lg);
+}
+.chart-svg {
+  width: 100%;
+  height: 540px;
+  display: block;
+}
+.chart-legend {
+  display: flex;
+  gap: var(--space-2xl);
+  margin-top: var(--space-lg);
+  font: 500 16px/1 var(--font-family);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-graphite);
+}
+.chart-legend .swatch {
+  display: inline-block;
+  width: 16px; height: 16px;
+  margin-right: var(--space-sm);
+  vertical-align: middle;
+}
+
+/* ======================================================================
+   ARCHETYPE — QUOTE CARD (§4.10)
+   ====================================================================== */
+.quote-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2xl);
+}
+.quote-card {
+  background: var(--color-parchment);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2xl);
+  position: relative;
+}
+.quote-card .qmark {
+  font: 300 96px/0.8 var(--font-family);
+  color: var(--color-claims-blue);
+  position: absolute;
+  top: 20px; left: 28px;
+}
+.quote-card .body {
+  font: 400 24px/1.5 var(--font-family);
+  color: var(--color-ink);
+  margin-top: 56px;
+}
+.quote-card .attr {
+  font: 500 18px/1.3 var(--font-family);
+  color: var(--color-graphite);
+  margin-top: var(--space-lg);
+  letter-spacing: 0.02em;
+}
+
+/* ======================================================================
+   ARCHETYPE — ROADMAP (§4.11)
+   ====================================================================== */
+.roadmap {
+  width: 100%;
+  margin-top: var(--space-2xl);
+}
+.roadmap-axis {
+  position: relative;
+  height: 1px;
+  background: var(--color-ink);
+  margin-bottom: var(--space-xl);
+}
+.roadmap-axis .tick {
+  position: absolute;
+  top: -12px;
+  width: 1px;
+  height: 12px;
+  background: var(--color-ink);
+}
+.roadmap-axis .tick-label {
+  position: absolute;
+  top: -50px;
+  transform: translateX(-50%);
+  font: 500 18px/1 var(--font-family);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-graphite);
+  font-variant-numeric: tabular-nums;
+}
+.roadmap-cols {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2xl);
+}
+.roadmap-cols ul {
+  list-style: none;
+}
+.roadmap-cols li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  padding: 12px 0;
+  font: 400 22px/1.35 var(--font-family);
+  color: var(--color-ink);
+}
+.roadmap-cols li .dot {
+  flex: 0 0 8px;
+  height: 8px;
+  margin-top: 14px;
+  border-radius: 50%;
+  background: var(--color-claims-blue);
+}
+.roadmap-cols li.cross .dot  { background: var(--color-copper); }
+.roadmap-cols li.shipped .dot { background: var(--color-moss); }
+.roadmap-legend {
+  display: flex;
+  gap: var(--space-2xl);
+  margin-top: var(--space-2xl);
+  font: 500 16px/1 var(--font-family);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-graphite);
+}
+.roadmap-legend .dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-right: var(--space-sm);
+  vertical-align: middle;
+}
+
+/* ======================================================================
+   ARCHETYPE — CLOSING (§4.12)
+   ====================================================================== */
+.slide.closing {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  overflow: hidden;
+}
+.closing .hero-art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url("Logos and pictures/finish-art.jpg");
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-color: var(--color-ink);
+}
+.closing .overlay {
+  position: absolute; inset: 0; z-index: 1;
+  /* Text now sits at the lower-left third — anchor the overlay there.
+     The tetrahedron + dome (upper center) and the right side of the image
+     stay completely clear. */
+  background:
+    radial-gradient(ellipse 55% 45% at 20% 78%, rgba(11,18,32,0.70) 0%, rgba(11,18,32,0.25) 65%, transparent 100%);
+}
+/* Lower-left third of the slide: headline "Let's talk" at cover-title size,
+   then two smaller contact lines beneath, left-aligned with the headline. */
+.closing-text {
+  position: absolute;
+  left: 160px;
+  bottom: 100px;
+  z-index: 3;
+  color: var(--color-paper);
+  max-width: 900px;
+}
+.closing-headline {
+  /* Same size and weight as the cover title (type.title-xl) */
+  font: 300 112px/1.05 var(--font-family);
+  letter-spacing: -0.015em;
+  color: var(--color-paper);
+  margin-bottom: var(--space-xl);
+}
+.closing-name {
+  font: 300 32px/1.35 var(--font-family);
+  letter-spacing: -0.005em;
+  color: var(--color-paper);
+}
+.closing-email {
+  font: 300 32px/1.35 var(--font-family);
+  letter-spacing: -0.005em;
+  color: var(--color-mist);
+}
+/* (No CLAIMS wordmark on the closing slide — see cover rule above.) */
+
+/* ======================================================================
+   REFERENCE / FOOTNOTE STRIP (§5)
+   ====================================================================== */
+.ref-strip {
+  position: absolute;
+  left: var(--safe-left);
+  right: var(--safe-right);
+  bottom: 110px;
+  padding-top: var(--space-md);
+  border-top: 0.5px solid var(--color-mist);
+  font: 400 14px/1.45 var(--font-family);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-graphite);
+}
+.ref-strip p { padding-left: 20px; text-indent: -20px; }
+sup.cite { color: var(--color-claims-blue); font-size: 60%; }
+
+/* ======================================================================
+   NAVIGATION & UI CHROME (hidden in print)
+   ====================================================================== */
+.nav {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(11,18,32,0.85);
+  padding: 8px 16px;
+  border-radius: 999px;
+  z-index: 100;
+  color: var(--color-paper);
+  font: 500 13px/1 var(--font-family);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+.nav button {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.3);
+  color: var(--color-paper);
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.nav button:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.6); }
+.nav .counter { font-variant-numeric: tabular-nums; min-width: 60px; text-align: center; }
+.nav .fs-btn { font-size: 16px; }
+
+/* ======================================================================
+   TRANSITIONS
+   ====================================================================== */
+.slide.active { animation: slide-in 0.35s ease-out; }
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.stage.fade .slide.active { animation: none; }
+
+/* ======================================================================
+   PRINT  (§8)
+   ====================================================================== */
+@media print {
+  @page { size: A4 landscape; margin: 0; }
+  html, body { background: white; overflow: visible; height: auto; }
+  .nav { display: none !important; }
+  .stage-wrap { position: static; display: block; }
+  .stage { transform: none !important; width: 297mm; height: 210mm; }
+  .slide {
+    display: block !important;
+    position: relative;
+    width: 297mm;
+    height: 210mm;
+    page-break-after: always;
+    overflow: hidden;
+    animation: none;
+  }
+  .slide:last-child { page-break-after: auto; }
+
+  /* Suppress left edge band fill — print as 1.5pt rule instead */
+  .slide::before {
+    width: 1.5pt !important;
+    background: var(--color-ink) !important;
+  }
+
+  /* Cover & closing: mute hero art to 15% opacity, switch title to ink */
+  .slide.cover, .slide.closing { background: white !important; color: var(--color-ink) !important; }
+  .slide.cover .hero-art, .slide.closing .hero-art { opacity: 0.15 !important; }
+  .slide.cover .overlay, .slide.closing .overlay { display: none !important; }
+  .slide.cover .cover-title { color: var(--color-ink) !important; }
+  .slide.cover .cover-eyebrow,
+  .slide.cover .cover-date,
+  .slide.closing .closing-email { color: var(--color-graphite) !important; }
+  .slide.closing .closing-headline,
+  .slide.closing .closing-name { color: var(--color-ink) !important; }
+  /* No .footer-logo on cover/closing — removed at HTML level. */
+
+  /* Scale tokens for A4 — base on width ratio (297mm ≈ 1122px @ 96dpi) */
+  .stage { font-size: 14px; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="stage-wrap">
+  <div class="stage" id="stage">
+
+    <!-- ================================================================
+         SLIDE 1 — COVER (§4.1)
+         ================================================================ -->
+    <section class="slide cover active" data-section="—" data-quarter="">
+      <div class="hero-art"></div>
+      <div class="overlay"></div>
+      <div class="cover-text">
+        <h1 class="cover-title t-title-xl">The Claims Subnet</h1>
+        <div class="cover-footer">
+          <div class="cover-date">Investor pitch · placeholder date</div>
+          <div class="cover-eyebrow t-meta">Bittensor · Proof of Talk · Jun 2026</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 2 — SECTION DIVIDER
+         ================================================================ -->
+    <section class="slide divider" data-section="—" data-quarter="">
+      <div class="divider-eyebrow t-meta">Part 01</div>
+      <div class="divider-number t-display">01</div>
+      <div class="divider-title t-title-lg">The problem we are solving.</div>
+      <div class="footer-logo">
+        <span class="wordmark">CLAIMS</span>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 3 — HERO STAT (§4.4)
+         ================================================================ -->
+    <section class="slide hero-stat-slide" data-section="01 · PROBLEM · Q2 2026" data-page="03">
+      <h2 class="slide-title t-title">Reference-grounded AI is a market, not a feature.</h2>
+      <div class="content" style="display:flex; flex-direction:column; justify-content:center;">
+        <div class="hero-context">VS. fragmented scholarly search market · 2025 baseline</div>
+        <div class="hero-numeral t-display-xl">$2.4B</div>
+        <div class="hero-support">
+          <span class="line">Annual spend on academic search and reference tools,</span>
+          <span class="line">that researchers already trust enough to pay for.</span>
+        </div>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo">
+        <span class="wordmark">CLAIMS</span>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 4 — SHORT LIST (§4.5a)
+         ================================================================ -->
+    <section class="slide short-list-slide" data-section="01 · PROBLEM · Q2 2026" data-page="04">
+      <h2 class="slide-title t-title">Why generic AI fails researchers.</h2>
+      <div class="content" style="display:flex; align-items:center;">
+        <ul class="short-list">
+          <li><span class="rule"></span>Fabricated citations that don't exist in any database.</li>
+          <li><span class="rule"></span>No coverage of specialized biomedical sources.</li>
+          <li><span class="rule"></span>Reasoning detached from primary evidence.</li>
+          <li><span class="rule"></span>Opaque updates that break reproducibility.</li>
+          <li><span class="rule accent"></span><span class="accent">No accountability when a claim is wrong.</span></li>
+        </ul>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo">
+        <span class="wordmark">CLAIMS</span>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 5 — METRIC TILE ROW (§4.5b)
+         ================================================================ -->
+    <section class="slide metric-row-slide" data-section="02 · TRACTION · Q2 2026" data-page="05">
+      <h2 class="slide-title t-title">Where we stand today.</h2>
+      <div class="content" style="display:flex; align-items:center;">
+        <div class="tile-row">
+          <div class="tile">
+            <div class="tile-rule"></div>
+            <div class="tile-numeral">30K</div>
+            <div class="tile-label">Users on <em>SciWeave</em></div>
+            <div class="tile-delta pos">+18% MoM</div>
+          </div>
+          <div class="tile">
+            <div class="tile-rule"></div>
+            <div class="tile-numeral">14</div>
+            <div class="tile-label">Integrations live</div>
+            <div class="tile-delta neu">across MCP-enabled tools</div>
+          </div>
+          <div class="tile">
+            <div class="tile-rule"></div>
+            <div class="tile-numeral">$732K</div>
+            <div class="tile-label">Cash on hand</div>
+            <div class="tile-delta neg">−$94K vs. Q1 forecast</div>
+          </div>
+          <div class="tile">
+            <div class="tile-rule"></div>
+            <div class="tile-numeral">3</div>
+            <div class="tile-label">Infrastructure partners</div>
+            <div class="tile-delta neu">OpenAlex · CrossRef · ORCID</div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo">
+        <span class="wordmark">CLAIMS</span>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 6 — TABLE (§4.6)
+         ================================================================ -->
+    <section class="slide table-slide" data-section="03 · COMPETITION · Q2 2026" data-page="06">
+      <h2 class="slide-title t-title">How we compare.</h2>
+      <div class="content" style="display:flex; align-items:center;">
+        <table class="research-table">
+          <thead>
+            <tr>
+              <th>Capability</th>
+              <th>Consensus</th>
+              <th>Elicit</th>
+              <th>SciSpace</th>
+              <th>Undermind</th>
+              <th>SciWeave</th>
+              <th class="num">Weight</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Literature breadth</td>
+              <td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td>
+              <td class="num">1.0</td>
+            </tr>
+            <tr>
+              <td>Biomedical databases</td>
+              <td>—</td><td>—</td><td>—</td><td>—</td><td>Cochrane · CT.gov · NIH</td>
+              <td class="num">1.4</td>
+            </tr>
+            <tr class="emphasis">
+              <td>MCP server</td>
+              <td>—</td><td>—</td><td>—</td><td>—</td><td>Yes</td>
+              <td class="num">1.2</td>
+            </tr>
+            <tr>
+              <td>Pay-per-use pricing</td>
+              <td>—</td><td>—</td><td>—</td><td>—</td><td>Yes</td>
+              <td class="num">0.8</td>
+            </tr>
+            <tr>
+              <td>Mobile apps</td>
+              <td>—</td><td>—</td><td>—</td><td>—</td><td>iOS · Android</td>
+              <td class="num">0.6</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo">
+        <span class="wordmark">CLAIMS</span>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 7 — BAR CHART (§4.7)
+         ================================================================ -->
+    <section class="slide chart-slide" data-section="02 · TRACTION · Q2 2026" data-page="07">
+      <h2 class="slide-title t-title">Monthly active users.</h2>
+      <div class="content" style="display:flex; flex-direction:column; justify-content:center;">
+        <div class="chart-title">MAU by quarter · Q2 2025 — Q1 2026</div>
+        <svg class="chart-svg" viewBox="0 0 1600 540" preserveAspectRatio="none">
+          <!-- gridlines -->
+          <line x1="80" y1="80"  x2="1560" y2="80"  stroke="#B5BAC4" stroke-width="0.5"/>
+          <line x1="80" y1="200" x2="1560" y2="200" stroke="#B5BAC4" stroke-width="0.5"/>
+          <line x1="80" y1="320" x2="1560" y2="320" stroke="#B5BAC4" stroke-width="0.5"/>
+          <line x1="80" y1="440" x2="1560" y2="440" stroke="#B5BAC4" stroke-width="0.5"/>
+          <!-- y axis labels -->
+          <text x="60" y="84"  text-anchor="end" fill="#4A5160" font-family="Inter" font-weight="400" font-size="18" style="font-variant-numeric:tabular-nums">30K</text>
+          <text x="60" y="204" text-anchor="end" fill="#4A5160" font-family="Inter" font-weight="400" font-size="18" style="font-variant-numeric:tabular-nums">20K</text>
+          <text x="60" y="324" text-anchor="end" fill="#4A5160" font-family="Inter" font-weight="400" font-size="18" style="font-variant-numeric:tabular-nums">10K</text>
+          <text x="60" y="444" text-anchor="end" fill="#4A5160" font-family="Inter" font-weight="400" font-size="18" style="font-variant-numeric:tabular-nums">0</text>
+          <!-- baseline -->
+          <line x1="80" y1="440" x2="1560" y2="440" stroke="#0B1220" stroke-width="1"/>
+          <!-- bars: Series 1 ink, Series 2 claims-blue, in pairs -->
+          <!-- Q2 25 -->
+          <rect x="180"  y="380" width="80"  height="60"  fill="#0B1220"/>
+          <rect x="270"  y="360" width="80"  height="80"  fill="#2D4F8E"/>
+          <text x="265"  y="475" text-anchor="middle" fill="#4A5160" font-family="Inter" font-size="18" style="letter-spacing:0.14em;text-transform:uppercase">Q2&nbsp;25</text>
+          <!-- Q3 25 -->
+          <rect x="450"  y="340" width="80"  height="100" fill="#0B1220"/>
+          <rect x="540"  y="300" width="80"  height="140" fill="#2D4F8E"/>
+          <text x="535"  y="475" text-anchor="middle" fill="#4A5160" font-family="Inter" font-size="18" style="letter-spacing:0.14em;text-transform:uppercase">Q3&nbsp;25</text>
+          <!-- Q4 25 -->
+          <rect x="720"  y="280" width="80"  height="160" fill="#0B1220"/>
+          <rect x="810"  y="220" width="80"  height="220" fill="#2D4F8E"/>
+          <text x="805"  y="475" text-anchor="middle" fill="#4A5160" font-family="Inter" font-size="18" style="letter-spacing:0.14em;text-transform:uppercase">Q4&nbsp;25</text>
+          <!-- Q1 26 -->
+          <rect x="990"  y="200" width="80"  height="240" fill="#0B1220"/>
+          <rect x="1080" y="100" width="80"  height="340" fill="#2D4F8E"/>
+          <text x="1075" y="475" text-anchor="middle" fill="#4A5160" font-family="Inter" font-size="18" style="letter-spacing:0.14em;text-transform:uppercase">Q1&nbsp;26</text>
+          <!-- value labels for the latest pair -->
+          <text x="1030" y="190" text-anchor="middle" fill="#0B1220" font-family="Inter" font-size="20" style="font-variant-numeric:tabular-nums">18K</text>
+          <text x="1120" y="90"  text-anchor="middle" fill="#2D4F8E" font-family="Inter" font-size="20" style="font-variant-numeric:tabular-nums">28K</text>
+        </svg>
+        <div class="chart-legend">
+          <span><span class="swatch" style="background:#0B1220"></span>Web</span>
+          <span><span class="swatch" style="background:#2D4F8E"></span>Mobile + MCP</span>
+        </div>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo">
+        <span class="wordmark">CLAIMS</span>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 8 — LINE CHART (§4.8)
+         ================================================================ -->
+    <section class="slide chart-slide" data-section="02 · TRACTION · Q2 2026" data-page="08">
+      <h2 class="slide-title t-title">Cohort retention.</h2>
+      <div class="content" style="display:flex; flex-direction:column; justify-content:center;">
+        <div class="chart-title">% of users active in month N · cohort by sign-up quarter</div>
+        <svg class="chart-svg" viewBox="0 0 1600 540" preserveAspectRatio="none">
+          <!-- gridlines -->
+          <line x1="80" y1="80"  x2="1560" y2="80"  stroke="#B5BAC4" stroke-width="0.5"/>
+          <line x1="80" y1="200" x2="1560" y2="200" stroke="#B5BAC4" stroke-width="0.5"/>
+          <line x1="80" y1="320" x2="1560" y2="320" stroke="#B5BAC4" stroke-width="0.5"/>
+          <line x1="80" y1="440" x2="1560" y2="440" stroke="#B5BAC4" stroke-width="0.5"/>
+          <text x="60" y="84"  text-anchor="end" fill="#4A5160" font-family="Inter" font-size="18" style="font-variant-numeric:tabular-nums">100%</text>
+          <text x="60" y="204" text-anchor="end" fill="#4A5160" font-family="Inter" font-size="18" style="font-variant-numeric:tabular-nums">75%</text>
+          <text x="60" y="324" text-anchor="end" fill="#4A5160" font-family="Inter" font-size="18" style="font-variant-numeric:tabular-nums">50%</text>
+          <text x="60" y="444" text-anchor="end" fill="#4A5160" font-family="Inter" font-size="18" style="font-variant-numeric:tabular-nums">25%</text>
+          <line x1="80" y1="500" x2="1560" y2="500" stroke="#0B1220" stroke-width="1"/>
+          <!-- x labels -->
+          <text x="200"  y="528" text-anchor="middle" fill="#4A5160" font-family="Inter" font-size="18" style="letter-spacing:0.14em;text-transform:uppercase">M1</text>
+          <text x="540"  y="528" text-anchor="middle" fill="#4A5160" font-family="Inter" font-size="18" style="letter-spacing:0.14em;text-transform:uppercase">M2</text>
+          <text x="880"  y="528" text-anchor="middle" fill="#4A5160" font-family="Inter" font-size="18" style="letter-spacing:0.14em;text-transform:uppercase">M3</text>
+          <text x="1220" y="528" text-anchor="middle" fill="#4A5160" font-family="Inter" font-size="18" style="letter-spacing:0.14em;text-transform:uppercase">M4</text>
+          <text x="1500" y="528" text-anchor="middle" fill="#4A5160" font-family="Inter" font-size="18" style="letter-spacing:0.14em;text-transform:uppercase">M5</text>
+          <!-- Series: ink → claims-blue → copper → atmosphere -->
+          <!-- Q1 26 cohort - ink -->
+          <polyline points="200,90 540,160 880,220 1220,260 1500,290" fill="none" stroke="#0B1220" stroke-width="2"/>
+          <circle cx="200" cy="90"  r="4" fill="#0B1220"/>
+          <circle cx="540" cy="160" r="4" fill="#0B1220"/>
+          <circle cx="880" cy="220" r="4" fill="#0B1220"/>
+          <circle cx="1220" cy="260" r="4" fill="#0B1220"/>
+          <circle cx="1500" cy="290" r="4" fill="#0B1220"/>
+          <!-- Q4 25 cohort - claims-blue -->
+          <polyline points="200,90 540,200 880,280 1220,340 1500,370" fill="none" stroke="#2D4F8E" stroke-width="2"/>
+          <circle cx="200" cy="90"  r="4" fill="#2D4F8E"/>
+          <circle cx="540" cy="200" r="4" fill="#2D4F8E"/>
+          <circle cx="880" cy="280" r="4" fill="#2D4F8E"/>
+          <circle cx="1220" cy="340" r="4" fill="#2D4F8E"/>
+          <circle cx="1500" cy="370" r="4" fill="#2D4F8E"/>
+          <!-- Q3 25 cohort - copper -->
+          <polyline points="200,90 540,240 880,330 1220,400 1500,430" fill="none" stroke="#B87333" stroke-width="2"/>
+          <circle cx="200" cy="90"  r="4" fill="#B87333"/>
+          <circle cx="540" cy="240" r="4" fill="#B87333"/>
+          <circle cx="880" cy="330" r="4" fill="#B87333"/>
+          <circle cx="1220" cy="400" r="4" fill="#B87333"/>
+          <circle cx="1500" cy="430" r="4" fill="#B87333"/>
+          <!-- inline labels at end of lines -->
+          <text x="1515" y="295" fill="#0B1220" font-family="Inter" font-weight="500" font-size="16" style="letter-spacing:0.14em;text-transform:uppercase">Q1&nbsp;26</text>
+          <text x="1515" y="375" fill="#2D4F8E" font-family="Inter" font-weight="500" font-size="16" style="letter-spacing:0.14em;text-transform:uppercase">Q4&nbsp;25</text>
+          <text x="1515" y="435" fill="#B87333" font-family="Inter" font-weight="500" font-size="16" style="letter-spacing:0.14em;text-transform:uppercase">Q3&nbsp;25</text>
+        </svg>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo">
+        <span class="wordmark">CLAIMS</span>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 9 — DONUT CHART (§4.9)
+         ================================================================ -->
+    <section class="slide chart-slide" data-section="02 · TRACTION · Q2 2026" data-page="09">
+      <h2 class="slide-title t-title">Where our users come from.</h2>
+      <div class="content" style="display:flex; align-items:center; gap: 96px;">
+        <svg viewBox="0 0 500 500" style="width: 500px; height: 500px; flex: 0 0 500px;">
+          <!-- Donut: 5,511 MAU center · slices ordered clockwise from 12 -->
+          <!-- We use stroke-dasharray on circles for slice rendering -->
+          <g transform="translate(250,250) rotate(-90)">
+            <!-- Outer radius 200, stroke 80 → donut hole 40% -->
+            <!-- Slices (degrees): PIs 40%, postdocs 25%, PhD 18%, R&D 10%, Devs 5%, Other 2% -->
+            <!-- Circumference = 2 * π * r = 2 * 3.14159 * 160 = 1005.31 -->
+            <circle r="160" cx="0" cy="0" fill="none" stroke="#0B1220"        stroke-width="80" stroke-dasharray="402.12 1005.31"  stroke-dashoffset="0"/>
+            <circle r="160" cx="0" cy="0" fill="none" stroke="#2D4F8E"        stroke-width="80" stroke-dasharray="251.33 1005.31"  stroke-dashoffset="-402.12"/>
+            <circle r="160" cx="0" cy="0" fill="none" stroke="#B87333"        stroke-width="80" stroke-dasharray="180.96 1005.31"  stroke-dashoffset="-653.45"/>
+            <circle r="160" cx="0" cy="0" fill="none" stroke="#8FA4C4"        stroke-width="80" stroke-dasharray="100.53 1005.31"  stroke-dashoffset="-834.41"/>
+            <circle r="160" cx="0" cy="0" fill="none" stroke="#3C6E47"        stroke-width="80" stroke-dasharray="50.27 1005.31"   stroke-dashoffset="-934.94"/>
+            <circle r="160" cx="0" cy="0" fill="none" stroke="#4A5160"        stroke-width="80" stroke-dasharray="20.10 1005.31"   stroke-dashoffset="-985.21"/>
+          </g>
+          <text x="250" y="240" text-anchor="middle" fill="#0B1220" font-family="Inter" font-weight="300" font-size="72" style="font-variant-numeric:tabular-nums; letter-spacing:-0.02em">5,511</text>
+          <text x="250" y="285" text-anchor="middle" fill="#4A5160" font-family="Inter" font-weight="500" font-size="14" style="letter-spacing:0.14em;text-transform:uppercase">MAU · Apr 2026</text>
+        </svg>
+        <div style="flex:1;">
+          <div style="display:flex; flex-direction:column; gap: 18px; font-family: Inter, sans-serif;">
+            <div style="display:flex; align-items:center; gap:16px;"><span style="width:16px;height:16px;background:#0B1220;"></span><span style="font-size:22px; color:#0B1220; flex:1;">Principal investigators</span><span style="font-size:22px; color:#0B1220; font-variant-numeric:tabular-nums;">40%</span></div>
+            <div style="display:flex; align-items:center; gap:16px;"><span style="width:16px;height:16px;background:#2D4F8E;"></span><span style="font-size:22px; color:#0B1220; flex:1;">Postdocs</span><span style="font-size:22px; color:#0B1220; font-variant-numeric:tabular-nums;">25%</span></div>
+            <div style="display:flex; align-items:center; gap:16px;"><span style="width:16px;height:16px;background:#B87333;"></span><span style="font-size:22px; color:#0B1220; flex:1;">PhD students</span><span style="font-size:22px; color:#0B1220; font-variant-numeric:tabular-nums;">18%</span></div>
+            <div style="display:flex; align-items:center; gap:16px;"><span style="width:16px;height:16px;background:#8FA4C4;"></span><span style="font-size:22px; color:#0B1220; flex:1;">Industry R&amp;D</span><span style="font-size:22px; color:#0B1220; font-variant-numeric:tabular-nums;">10%</span></div>
+            <div style="display:flex; align-items:center; gap:16px;"><span style="width:16px;height:16px;background:#3C6E47;"></span><span style="font-size:22px; color:#0B1220; flex:1;">Developers (MCP)</span><span style="font-size:22px; color:#0B1220; font-variant-numeric:tabular-nums;">5%</span></div>
+            <div style="display:flex; align-items:center; gap:16px;"><span style="width:16px;height:16px;background:#4A5160;"></span><span style="font-size:22px; color:#0B1220; flex:1;">Other</span><span style="font-size:22px; color:#0B1220; font-variant-numeric:tabular-nums;">2%</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo">
+        <span class="wordmark">CLAIMS</span>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 10 — QUOTE CARDS (§4.10)
+         ================================================================ -->
+    <section class="slide quote-slide" data-section="04 · VALIDATION · Q2 2026" data-page="10">
+      <h2 class="slide-title t-title">What researchers say.</h2>
+      <div class="content" style="display:flex; align-items:center;">
+        <div class="quote-grid" style="width:100%;">
+          <div class="quote-card">
+            <div class="qmark">&ldquo;</div>
+            <div class="body">Placeholder quote about how SciWeave changed a lit-review workflow.<br>Real citations, no fabrication, finished a draft in a single afternoon.</div>
+            <div class="attr">— [PLACEHOLDER], postdoc, genomics, [institution]</div>
+          </div>
+          <div class="quote-card">
+            <div class="qmark">&ldquo;</div>
+            <div class="body">Placeholder quote about the MCP integration making a grant section<br>actually defensible against reviewer pushback on references.</div>
+            <div class="attr">— [PLACEHOLDER], PI, neuroscience, [institution]</div>
+          </div>
+          <div class="quote-card">
+            <div class="qmark">&ldquo;</div>
+            <div class="body">Placeholder quote about Cochrane integration and clinical evidence<br>that no other AI tool can surface in one place.</div>
+            <div class="attr">— [PLACEHOLDER], R&amp;D scientist, biotech, [company]</div>
+          </div>
+          <div class="quote-card">
+            <div class="qmark">&ldquo;</div>
+            <div class="body">Placeholder quote about pay-per-use pricing matching how researchers<br>actually work — sprints with deadlines, not steady consumption.</div>
+            <div class="attr">— [PLACEHOLDER], doctoral student, economics, [institution]</div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo">
+        <span class="wordmark">CLAIMS</span>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 11 — ROADMAP (§4.11)
+         ================================================================ -->
+    <section class="slide roadmap-slide" data-section="05 · ROADMAP · Q2 2026" data-page="11">
+      <h2 class="slide-title t-title"><em>SciWeave</em> — next four quarters.</h2>
+      <div class="content" style="display:flex; flex-direction:column; justify-content:center;">
+        <div class="roadmap">
+          <div class="roadmap-axis">
+            <div class="tick" style="left:12.5%;">
+              <div class="tick-label">Q2 26</div>
+            </div>
+            <div class="tick" style="left:37.5%;">
+              <div class="tick-label">Q3 26</div>
+            </div>
+            <div class="tick" style="left:62.5%;">
+              <div class="tick-label">Q4 26</div>
+            </div>
+            <div class="tick" style="left:87.5%;">
+              <div class="tick-label">Q1 27</div>
+            </div>
+          </div>
+          <div class="roadmap-cols">
+            <ul>
+              <li class="shipped"><span class="dot"></span>Bittensor Claims Subnet alpha</li>
+              <li><span class="dot"></span>Clinical-evidence MCP module</li>
+              <li class="cross"><span class="dot"></span>iOS 2.0 redesign</li>
+            </ul>
+            <ul>
+              <li><span class="dot"></span>Workflow-builder for overnight runs</li>
+              <li><span class="dot"></span>Cochrane integration v2</li>
+              <li class="cross"><span class="dot"></span>Subnet validator onboarding</li>
+            </ul>
+            <ul>
+              <li><span class="dot"></span>Proteomics database connector</li>
+              <li><span class="dot"></span>Team-tier pricing live</li>
+              <li class="cross"><span class="dot"></span>Reference-manager plugin</li>
+            </ul>
+            <ul>
+              <li><span class="dot"></span>Native PDF-grounded answers</li>
+              <li><span class="dot"></span>Enterprise pilot &times; 3</li>
+              <li class="cross"><span class="dot"></span>Series-A close target</li>
+            </ul>
+          </div>
+          <div class="roadmap-legend">
+            <span><span class="dot" style="background:#2D4F8E"></span>Product</span>
+            <span><span class="dot" style="background:#B87333"></span>Cross-team</span>
+            <span><span class="dot" style="background:#3C6E47"></span>Shipped</span>
+          </div>
+        </div>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo">
+        <span class="wordmark">CLAIMS</span>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 12 — HERO STAT WITH CITATIONS (demonstrates §5 footnotes)
+         ================================================================ -->
+    <section class="slide hero-stat-slide" data-section="01 · PROBLEM · Q2 2026" data-page="12">
+      <h2 class="slide-title t-title">The audience we serve.</h2>
+      <div class="content" style="display:flex; flex-direction:column; justify-content:center;">
+        <div class="hero-context">global higher-education enrollment, 2023</div>
+        <div class="hero-numeral t-display-xl">235M<sup class="cite">1</sup></div>
+        <div class="hero-support">
+          <span class="line">students, postdocs, and faculty who write papers,</span>
+          <span class="line">review evidence, and depend on real citations.</span>
+        </div>
+      </div>
+      <div class="ref-strip">
+        <p><sup>1</sup>&nbsp;UNESCO Institute for Statistics (2025). Higher education enrollment data. http://uis.unesco.org</p>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo">
+        <span class="wordmark">CLAIMS</span>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 13 — CLOSING (§4.12)
+         ================================================================ -->
+    <section class="slide closing" data-section="—" data-quarter="">
+      <div class="hero-art"></div>
+      <div class="overlay"></div>
+      <div class="closing-text">
+        <h1 class="closing-headline">Let&rsquo;s talk.</h1>
+        <div class="closing-name">Prof. Dr. Philipp Koellinger</div>
+        <div class="closing-email">philipp@desci.com</div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- ====================================================================
+     NAV CHROME
+     ==================================================================== -->
+<nav class="nav" id="nav">
+  <button id="prev" title="Previous (←)">&larr;</button>
+  <span class="counter" id="counter">01 / 13</span>
+  <button id="next" title="Next (→ / space)">&rarr;</button>
+  <button class="fs-btn" id="fs" title="Fullscreen (F)">⛶</button>
+</nav>
+
+<script>
+/* ======================================================================
+   SLIDE NAVIGATION & SCALING
+   ====================================================================== */
+(function () {
+  const stage   = document.getElementById('stage');
+  const slides  = Array.from(stage.querySelectorAll('.slide'));
+  const total   = slides.length;
+  const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  const fsBtn   = document.getElementById('fs');
+  let idx = 0;
+
+  // Pad helper
+  const pad2 = n => n.toString().padStart(2, '0');
+
+  // Populate per-slide footer (section tab + page numeral) from data-attrs
+  slides.forEach((s, i) => {
+    const tab  = s.querySelector('.footer-tab');
+    const page = s.querySelector('.footer-page');
+    if (tab && s.dataset.section && s.dataset.section !== '—') {
+      tab.textContent = s.dataset.section;
+    }
+    if (page) {
+      page.textContent = pad2(i + 1) + ' / ' + pad2(total);
+    }
+  });
+
+  function show(n) {
+    idx = (n + total) % total;
+    slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+    counter.textContent = pad2(idx + 1) + ' / ' + pad2(total);
+    // Update browser URL hash for deep-linking
+    history.replaceState(null, '', '#' + (idx + 1));
+  }
+
+  // Scale stage to viewport
+  function fit() {
+    const wrap = stage.parentElement;
+    const sx = wrap.clientWidth  / 1920;
+    const sy = wrap.clientHeight / 1080;
+    const scale = Math.min(sx, sy);
+    stage.style.transform = `scale(${scale})`;
+  }
+  window.addEventListener('resize', fit);
+  fit();
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+      e.preventDefault(); show(idx + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault(); show(idx - 1);
+    } else if (e.key === 'Home') {
+      e.preventDefault(); show(0);
+    } else if (e.key === 'End') {
+      e.preventDefault(); show(total - 1);
+    } else if (e.key === 'f' || e.key === 'F') {
+      toggleFs();
+    } else if (e.key === 'Escape') {
+      if (document.fullscreenElement) document.exitFullscreen();
+    }
+  });
+
+  // Click navigation
+  prevBtn.addEventListener('click', () => show(idx - 1));
+  nextBtn.addEventListener('click', () => show(idx + 1));
+
+  // Fullscreen
+  function toggleFs() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  }
+  fsBtn.addEventListener('click', toggleFs);
+
+  // Deep-link from URL hash on load
+  const initial = parseInt(location.hash.replace('#',''), 10);
+  if (!isNaN(initial) && initial >= 1 && initial <= total) {
+    show(initial - 1);
+  } else {
+    show(0);
+  }
+
+  // Click on left/right halves of slide to navigate (presentation-friendly)
+  stage.addEventListener('click', e => {
+    if (e.target.closest('.nav')) return;
+    const rect = stage.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    if (x > rect.width / 2) show(idx + 1); else show(idx - 1);
+  });
+})();
+</script>
+
+</body>
+</html>
