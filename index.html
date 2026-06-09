@@ -82,6 +82,12 @@ html, body {
   position: relative;
   width: var(--stage-w);
   height: var(--stage-h);
+  flex-shrink: 0;    /* prevent the flex parent (.stage-wrap) from squishing the
+                        1920×1080 layout box to fit a narrower viewport.
+                        Without this, on viewports narrower than 1920px the
+                        stage was getting shrunk to viewport_width × 1080
+                        before transform: scale() ran — distorting the aspect
+                        ratio to roughly 4:3 instead of preserving 16:9. */
   transform-origin: center center;
   background: var(--color-paper);
 }
@@ -107,7 +113,28 @@ html, body {
   z-index: 2;
 }
 .slide.cover::before,
-.slide.closing::before { display: none; }
+.slide.closing::before,
+.slide.fullbleed-img::before { display: none; }
+
+/* Full-bleed image slide — used for the final appendix slide that displays
+   the source rfm.png reward-function reference verbatim. No title, no
+   footer chrome — the image fills the stage. */
+.slide.fullbleed-img {
+  background: var(--color-paper);
+  display: none;
+}
+.slide.fullbleed-img.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.slide.fullbleed-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
 
 /* ======================================================================
    TYPE SCALE — Inter only, hierarchy via weight, size, tracking
@@ -232,7 +259,7 @@ em { font-style: italic; font-weight: inherit; }
 }
 .cover-tagline {
   color: var(--color-mist);
-  font: 400 22px/1.2 var(--font-family);
+  font: 400 26px/1.3 var(--font-family);    /* matches the .support-tile .lbl size used on slide 2 (R&D spending annually, etc.) */
 }
 .cover-eyebrow {
   color: var(--color-mist);
@@ -272,7 +299,9 @@ em { font-style: italic; font-weight: inherit; }
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-2xl);
   margin-top: var(--space-4xl);
-  max-width: 1400px;
+  max-width: 1640px;  /* widened from 1400px on 2026-05-26 so the longer labels
+                         fit on one line at the new 26px font size; each column
+                         now gets (1640 − 96) / 3 ≈ 515px of width */
 }
 .support-tile { display: flex; flex-direction: column; }
 .support-tile .rule {
@@ -289,8 +318,9 @@ em { font-style: italic; font-weight: inherit; }
 .support-tile.copper .num { color: var(--color-copper); }
 .support-tile.copper .rule { background: var(--color-copper); }
 .support-tile .lbl {
-  font: 400 20px/1.3 var(--font-family);
+  font: 400 26px/1.3 var(--font-family);
   color: var(--color-graphite);
+  white-space: nowrap;
   margin-top: var(--space-sm);
 }
 
@@ -367,16 +397,18 @@ em { font-style: italic; font-weight: inherit; }
   margin-top: var(--space-md);
 }
 .tile .tile-label {
-  font: 400 22px/1.35 var(--font-family);
+  font: 400 30px/1.35 var(--font-family);
   color: var(--color-graphite);
   margin-top: var(--space-md);
   text-align: left;
+  white-space: nowrap;        /* enforce single-line — tile grows to fit, pulling the rule wider */
 }
 .tile .tile-delta {
-  font: 500 16px/1.3 var(--font-family);
+  font: 500 30px/1.3 var(--font-family);
   margin-top: var(--space-sm);
   letter-spacing: 0.02em;
   text-align: left;
+  white-space: nowrap;
 }
 .tile .tile-delta.pos { color: var(--color-moss); }
 .tile .tile-delta.copper { color: var(--color-copper); }
@@ -548,7 +580,7 @@ em { font-style: italic; font-weight: inherit; }
   margin-top: 60px;
 }
 .quote-context {
-  font: 400 24px/1.45 var(--font-family);
+  font: 400 30px/1.45 var(--font-family);
   color: var(--color-graphite);
   margin-top: var(--space-2xl);
   max-width: 1560px;
@@ -684,7 +716,285 @@ em { font-style: italic; font-weight: inherit; }
   height: auto;
 }
 
-/* Slide 9 — Inner loop (miner–validator cycle) */
+/* Slide 9 — Principled Incentive Design (PID table)
+   3-column layout (Behavior | Observed | Reward) plus a row-number gutter on
+   the left. The CHANNEL column was dropped per user direction — it added no
+   information beyond what BEHAVIOR already conveys. Rows are separated by
+   copper-dashed "gate" strips that explicitly describe the dependency
+   structure (row 2 reward conditional on row 1 passing, etc.), replacing
+   the old neutral grey rules with semantically meaningful dividers. */
+.pid-grid {
+  display: grid;
+  /* num | Behavior | arrow | Observed | arrow | Reward | mirror-gutter
+     Three equal-width content columns. The trailing 64px mirror cell
+     balances the 64px row-num gutter on the left so the Observed
+     column lands at the slide's true horizontal center. */
+  grid-template-columns: 64px 1fr 56px 1fr 56px 1fr 64px;
+  column-gap: 18px;
+  row-gap: 30px;
+  align-items: start;
+  width: 100%;
+}
+.pid-header-cell {
+  font: 500 30px/1.15 var(--font-family);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-graphite);
+  text-align: center;
+  align-self: end;
+  margin-bottom: 28px;       /* lifts headers and opens whitespace to the icon row below */
+}
+.pid-num {
+  font: 500 28px/1 var(--font-family);
+  letter-spacing: 0.18em;
+  color: var(--color-graphite);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  align-self: center;
+}
+.pid-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  font: 400 28px/1.3 var(--font-family);
+  color: var(--color-ink);
+  text-align: center;
+  white-space: nowrap;        /* enforce single-line labels per user spec */
+}
+.pid-icon {
+  width: 56px;
+  height: 56px;
+  color: var(--color-graphite);
+  display: block;
+  flex-shrink: 0;
+}
+.pid-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: start;
+  margin-top: 21px;  /* center arrow against the now-56px icon row (icon mid = 28, arrow mid = 7) */
+}
+.pid-arrow svg {
+  width: 100%;
+  height: 14px;
+  display: block;
+}
+/* Dependency gate divider — replaces the old neutral .pid-rule.
+   Reads as "[dashed] gate label [dashed]" centered across the full table width. */
+.pid-gate {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 2px 24px;
+}
+.pid-gate-line {
+  flex: 1;
+  border-top: 1.5px dashed var(--color-copper);
+}
+.pid-gate-text {
+  font: 400 italic 24px/1 var(--font-family);
+  color: var(--color-copper);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* Slide 10 — Paper to claim-evidence (artifact slide) */
+.artifact-grid {
+  display: grid;
+  grid-template-columns: 600px 1fr 760px;    /* left col pinned to slide edge; middle 1fr widens the arrow gutter; right col flush right */
+  column-gap: 40px;
+  height: 100%;
+  align-items: start;                        /* both columns anchor at the top */
+  padding-bottom: 100px;                     /* preserve room above counter strip */
+}
+.artifact-eyebrow {
+  font: 500 19px/1 var(--font-family);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-graphite);
+  margin-bottom: 18px;
+}
+.artifact-paper-col,
+.artifact-card-col {
+  display: flex;
+  flex-direction: column;
+}
+.artifact-arrow-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  align-self: center;     /* override grid align-items: start — vertically center against the cards */
+}
+.artifact-arrow-col .artifact-eyebrow {
+  text-align: center;
+  max-width: 180px;       /* widened so STRUCTURE (longest word + letter-spacing) fits without overflowing the centering box */
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+/* Stylized paper render */
+.artifact-paper {
+  background: var(--color-paper);
+  border: 1px solid var(--color-fog);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(11, 18, 32, 0.08);
+  padding: 40px 40px 32px 40px;
+  width: 100%;
+  height: 600px;  /* shorter to clear the counter strip */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.paper-masthead {
+  font: 500 20px/1 var(--font-family);
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  padding-bottom: 14px;
+  border-bottom: 1.5px solid var(--color-ink);
+  margin-bottom: 24px;
+}
+.paper-title {
+  font: 400 24px/1.32 var(--font-family);
+  color: var(--color-ink);
+  margin-bottom: 14px;
+  letter-spacing: -0.005em;
+}
+.paper-authors {
+  font: 400 italic 16px/1.3 var(--font-family);
+  color: var(--color-graphite);
+  margin-bottom: 26px;
+}
+.paper-greek {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.paper-greek .greek-line {
+  height: 6px;
+  background: var(--color-mist);
+  border-radius: 1px;
+  opacity: 0.55;
+}
+.paper-greek .greek-line.s  { width: 38%; }
+.paper-greek .greek-line.m  { width: 72%; }
+.paper-greek .greek-line.l  { width: 88%; }
+.paper-greek .greek-line.xl { width: 96%; }
+.paper-highlight {
+  background: rgba(184, 115, 51, 0.14);  /* color.copper at 14% */
+  padding: 14px 16px;
+  margin: 18px -4px;
+  font: 400 17px/1.5 var(--font-family);
+  color: var(--color-ink);
+  border-radius: 2px;
+}
+.paper-highlight em {
+  font-style: italic;
+}
+
+/* Transformation arrow */
+.artifact-arrow-svg {
+  width: 90px;
+  height: 22px;
+  display: block;
+  margin-top: 4px;
+}
+
+/* Schema card */
+.artifact-card {
+  background: var(--color-parchment);
+  border: 1.5px solid var(--color-ink);
+  border-radius: var(--radius-lg);
+  padding: 26px 34px;
+  width: 100%;
+}
+.artifact-card dl {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  column-gap: 32px;
+  row-gap: 0;
+  margin: 0;
+}
+.artifact-card dt {
+  font: 500 15px/1.5 var(--font-family);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-graphite);
+  padding: 9px 0;
+  border-top: 1px solid var(--color-fog);
+  align-self: center;
+}
+.artifact-card dd {
+  font: 400 21px/1.35 var(--font-family);
+  color: var(--color-ink);
+  margin: 0;
+  padding: 9px 0;
+  border-top: 1px solid var(--color-fog);
+  align-self: center;
+}
+.artifact-card dt:first-of-type,
+.artifact-card dd:first-of-type {
+  border-top: none;
+  padding-top: 4px;
+}
+.artifact-card .claim-text {
+  font: 400 italic 23px/1.35 var(--font-family);
+  color: var(--color-ink);
+}
+.artifact-card .id-mono {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 18px;
+  color: var(--color-graphite);
+}
+.artifact-card .predicate {
+  border-bottom: 1.5px solid var(--color-copper);
+  padding-bottom: 1px;
+}
+.artifact-card .source-cite {
+  font-size: 19px;
+}
+.artifact-card .source-cite em {
+  font-style: italic;
+}
+.artifact-card .source-cite a {
+  color: var(--color-claims-blue);
+  text-decoration: underline;
+}
+.artifact-card .conf-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-moss);
+  margin-right: 10px;
+  vertical-align: middle;
+  transform: translateY(-1px);
+}
+.artifact-card .status-check {
+  color: var(--color-moss);
+  font-weight: 600;
+  margin-right: 8px;
+  font-size: 19px;
+}
+
+/* Bottom counter strip — anchored to the bottom of the content area */
+.artifact-counter {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 24px;
+  text-align: center;
+  font: 500 18px/1 var(--font-family);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-graphite);
+}
+
+/* Slide 10 — Inner loop (miner–validator cycle) */
 .loop-stage {
   position: relative;
   height: 100%;
@@ -751,6 +1061,20 @@ em { font-style: italic; font-weight: inherit; }
 .incentive-formula .katex-display {
   margin: 0;              /* override KaTeX's default block margin */
 }
+/* Inline-block wrapper sizes itself to the formula's natural width, so the
+   caption beneath inherits that width and its left edge lines up with R_m. */
+.incentive-formula .formula-stack {
+  display: inline-block;
+}
+.incentive-formula .formula-caption {
+  margin-top: 200px;      /* tuned so the caption baseline lands on the "P  Penalty" row;
+                             margin shrinks the stack height which, under center-alignment,
+                             lifts the caption up by half the change */
+  font: italic 400 24px/1.2 var(--font-family);
+  letter-spacing: 0.04em;
+  color: #B87333;         /* copper — same accent as the slide A.02 edge labels */
+  text-align: left;
+}
 .incentive-vars {
   font: 400 30px/1.6 var(--font-family);
   color: var(--color-ink);
@@ -775,6 +1099,11 @@ em { font-style: italic; font-weight: inherit; }
   color: var(--color-graphite);
   font: 400 30px/1.35 var(--font-family);
 }
+
+/* (Appendix A.06 — Reward Function Math is now a full-bleed image slide;
+   the elaborate KaTeX-rendered layout was removed 2026-05-26 in favor of
+   embedding the user's source rfm.png reference directly. See the
+   .slide.fullbleed-img rules near the top of this stylesheet.) */
 
 /* Slide 11 — two-tier stack (legacy class names retained) */
 .stack-substrate {
@@ -934,7 +1263,7 @@ em { font-style: italic; font-weight: inherit; }
   margin-top: 72px;
 }
 .bm-col-head {
-  font: 500 20px/1.2 var(--font-family);
+  font: 500 24px/1.2 var(--font-family);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   margin-bottom: var(--space-2xl);
@@ -956,7 +1285,7 @@ em { font-style: italic; font-weight: inherit; }
 .moat-layer {
   border-left: 4px solid var(--color-ink);
   padding: var(--space-lg) var(--space-xl);
-  font: 400 22px/1.35 var(--font-family);
+  font: 400 26px/1.35 var(--font-family);
   color: var(--color-ink);
   white-space: nowrap;
 }
@@ -1011,10 +1340,10 @@ em { font-style: italic; font-weight: inherit; }
 }
 .roadmap-tick .lbl {
   position: absolute;
-  top: -32px;
+  top: -36px;
   left: 50%;
   transform: translateX(-50%);
-  font: 500 18px/1 var(--font-family);
+  font: 500 22px/1 var(--font-family);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-graphite);
@@ -1031,7 +1360,7 @@ em { font-style: italic; font-weight: inherit; }
   gap: var(--space-2xl);
 }
 .phase-col h3 {
-  font: 500 30px/1.2 var(--font-family);
+  font: 500 36px/1.2 var(--font-family);
   color: var(--color-ink);
   margin-bottom: var(--space-lg);
 }
@@ -1044,7 +1373,7 @@ em { font-style: italic; font-weight: inherit; }
   gap: var(--space-md);
   align-items: flex-start;
   padding: 8px 0;
-  font: 400 22px/1.35 var(--font-family);
+  font: 400 26px/1.35 var(--font-family);
   color: var(--color-ink);
 }
 .phase-col li::before {
@@ -1060,9 +1389,9 @@ em { font-style: italic; font-weight: inherit; }
   display: inline-block;
   background: var(--color-copper);
   color: var(--color-paper);
-  padding: 8px 16px;
+  padding: 10px 18px;
   border-radius: 999px;
-  font: 500 16px/1.2 var(--font-family);
+  font: 500 20px/1.2 var(--font-family);
   letter-spacing: 0.06em;
   font-style: italic;
   font-weight: 400;
@@ -1188,6 +1517,7 @@ em { font-style: italic; font-weight: inherit; }
         <div class="cover-subtitle">The canonical claim-evidence graph for science.</div>
         <div class="cover-footer">
           <div class="cover-tagline">A Bittensor subnet. By the team that built <em>SciWeave</em>.</div>
+          <div class="cover-tagline cover-presenter">Prof. Dr. Philipp Koellinger</div>
         </div>
       </div>
     </section>
@@ -1276,7 +1606,7 @@ em { font-style: italic; font-weight: inherit; }
          SLIDE 4 — PURPOSE / NEGATIVE SPACE
          ================================================================ -->
     <section class="slide" data-section="01 · Purpose" data-page="04">
-      <h2 class="slide-title t-title">Our Purpose.</h2>
+      <h2 class="slide-title t-title">Solution.</h2>
       <div class="content">
         <div class="purpose-grid">
           <div>
@@ -1286,7 +1616,7 @@ em { font-style: italic; font-weight: inherit; }
               <span class="line">space of science computable.</span>
             </h3>
             <div style="font: 400 32px/1.4 var(--font-family); color: var(--color-graphite); max-width: 720px;">
-              Scientific AI needs structure,<br>not just scale.
+              Enable AI to identify the most promising<br>research opportunities.
             </div>
           </div>
           <div class="purpose-graph">
@@ -1327,11 +1657,17 @@ em { font-style: italic; font-weight: inherit; }
               <circle cx="300" cy="520" r="11" fill="none" stroke="#B87333" stroke-width="1.5" stroke-dasharray="3 3"/>
               <circle cx="600" cy="540" r="10" fill="none" stroke="#B87333" stroke-width="1.5" stroke-dasharray="3 3"/>
 
-              <!-- Label for the contradiction -->
-              <text x="420" y="245" fill="#B87333" font-family="Inter" font-size="18" font-style="italic" letter-spacing="0.06em">contradicts</text>
+              <!-- Label for the contradiction. x and y tuned so the larger
+                   22px text still sits inside the triangle formed by nodes
+                   (420,140), (560,240) and (380,340) without grazing the
+                   dashed orange contradict-edge on the left or the two solid
+                   triangle edges on the right. -->
+              <text x="410" y="247" fill="#B87333" font-family="Inter" font-size="22" font-style="italic" letter-spacing="0.04em">contradicts</text>
 
-              <!-- Label for negative space region -->
-              <text x="180" y="560" fill="#B87333" font-family="Inter" font-size="18" font-style="italic" letter-spacing="0.06em">negative space</text>
+              <!-- Label for opportunity region. Shifted down 5px to keep
+                   clearance from the dashed circle at (300,520) at the
+                   larger font size. -->
+              <text x="180" y="565" fill="#B87333" font-family="Inter" font-size="22" font-style="italic" letter-spacing="0.04em">opportunity</text>
             </svg>
           </div>
         </div>
@@ -1437,8 +1773,8 @@ em { font-style: italic; font-weight: inherit; }
         </div>
         <div class="quote-context">
           Well-funded biotech startup. Thousands of papers to find and review.<br>
-          An FDA-relevant decision. Failing to vibe-code an AI research workflow himself.<br>
-          Willing to pay us for a pilot. Two additional pilot customers in line.
+          An FDA-relevant decision. Willing to pay us for a pilot.<br>
+          Two additional pilot customers in line.
         </div>
       </div>
       <div class="footer-tab t-meta"></div>
@@ -1447,54 +1783,98 @@ em { font-style: italic; font-weight: inherit; }
     </section>
 
     <!-- ================================================================
-         SLIDE 7 — MARKET (Metric tile composition)
+         SLIDE 7 — PAPER TO CLAIM-EVIDENCE (Artifact slide)
+         The transformation of one paper passage into one structured ClaimRecord.
+         Left pane: stylized rendering of the Rietveld et al. 2013 Science paper
+         with the source quote highlighted in color.copper.
+         Right pane: the structured ClaimRecord rendered as the schema itself —
+         labels are the schema fields; values are the extracted data.
+         Source data: /uploads/reviewer_claims_with_quote_Rietveld_et_al_2013_Science.csv
+         (claim_id: cf698a2df228dd43, reviewer_decision: accept).
          ================================================================ -->
-    <section class="slide" data-section="04 · Market" data-page="07">
-      <h2 class="slide-title t-title">Market.</h2>
-      <div class="content" style="display:flex; flex-direction:column; justify-content:center;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+    <section class="slide" data-section="04 · Claim-evidence" data-page="07">
+      <h2 class="slide-title t-title">Paper to claim-evidence.</h2>
+      <div class="content">
+        <div class="artifact-grid">
 
-          <div class="tile" style="flex: 0 0 auto;">
-            <div class="tile-top"><div class="tile-rule"></div></div>
-            <div class="tile-numeral">$20–50B</div>
-            <div class="tile-label">R&amp;D intelligence and evidence work</div>
-            <div class="tile-delta pos">+5% / yr &middot; R&amp;D spending growth &middot; OECD</div>
-          </div>
-
-          <div class="claims-hub">
-            <div class="tile-top">
-              <svg width="300" height="80" viewBox="0 0 300 80">
-                <!-- Left arrow flowing in toward the polyhedron, line at the same y as the tile rules -->
-                <line x1="10" y1="40" x2="106" y2="40" stroke="#2D4F8E" stroke-width="2.5"/>
-                <polygon points="116,40 104,33 104,47" fill="#2D4F8E"/>
-
-                <!-- Center polyhedron — callback to cover artwork, sitting at the rule-line y -->
-                <g transform="translate(150, 40)">
-                  <polygon points="0,-26 22,-13 22,13 0,26 -22,13 -22,-13" fill="#0B1220"/>
-                  <line x1="0" y1="-26" x2="0" y2="26" stroke="#4A5160" stroke-width="0.6"/>
-                  <line x1="-22" y1="-13" x2="22" y2="13" stroke="#4A5160" stroke-width="0.6"/>
-                  <line x1="-22" y1="13" x2="22" y2="-13" stroke="#4A5160" stroke-width="0.6"/>
-                  <circle cx="0" cy="0" r="2" fill="#FFFFFF" opacity="0.5"/>
-                </g>
-
-                <!-- Right arrow flowing in toward the polyhedron -->
-                <line x1="194" y1="40" x2="290" y2="40" stroke="#2D4F8E" stroke-width="2.5"/>
-                <polygon points="184,40 196,33 196,47" fill="#2D4F8E"/>
-              </svg>
+          <!-- LEFT PANE — stylized journal-article render -->
+          <div class="artifact-paper-col">
+            <div class="artifact-eyebrow">Source paper</div>
+            <div class="artifact-paper">
+              <div class="paper-masthead">Science</div>
+              <div class="paper-title">GWAS of 126,559 Individuals Identifies Genetic Variants Associated with Educational Attainment</div>
+              <div class="paper-authors">Rietveld et al., 2013</div>
+              <div class="paper-greek">
+                <span class="greek-line xl"></span>
+                <span class="greek-line l"></span>
+                <span class="greek-line xl"></span>
+                <span class="greek-line m"></span>
+                <span class="greek-line l"></span>
+                <span class="greek-line s"></span>
+              </div>
+              <div class="paper-highlight">
+                "For years of schooling, the strongest effect identified (rs9320913) explains 0.022% of phenotypic variance in the replication sample."
+              </div>
+              <div class="paper-greek">
+                <span class="greek-line xl"></span>
+                <span class="greek-line m"></span>
+                <span class="greek-line l"></span>
+                <span class="greek-line xl"></span>
+                <span class="greek-line s"></span>
+                <span class="greek-line l"></span>
+                <span class="greek-line m"></span>
+              </div>
             </div>
-            <div class="hub-wordmark">Claims</div>
           </div>
 
-          <div class="tile" style="flex: 0 0 auto;">
-            <div class="tile-top"><div class="tile-rule"></div></div>
-            <div class="tile-numeral">$5–9B</div>
-            <div class="tile-label">AI training data for scientific models</div>
-            <div class="tile-delta copper">+100% / yr</div>
+          <!-- MIDDLE — transformation arrow with role-mapped eyebrow -->
+          <div class="artifact-arrow-col">
+            <div class="artifact-eyebrow">Extract<br>Verify<br>Structure</div>
+            <svg class="artifact-arrow-svg" viewBox="0 0 90 22" preserveAspectRatio="xMidYMid meet">
+              <line x1="0" y1="11" x2="78" y2="11" stroke="#0B1220" stroke-width="2.5"/>
+              <path d="M 90,11 L 76,4 L 76,18 Z" fill="#0B1220"/>
+            </svg>
           </div>
+
+          <!-- RIGHT PANE — the schema, rendered as a record -->
+          <div class="artifact-card-col">
+            <div class="artifact-eyebrow" style="color: var(--color-claims-blue);">Structured claim-evidence record</div>
+            <div class="artifact-card">
+              <dl>
+                <dt>Claim ID</dt>
+                <dd><span class="id-mono">cf698a2df228dd43</span></dd>
+
+                <dt>Claim</dt>
+                <dd class="claim-text">The SNP rs9320913 explains 0.022% of phenotypic variance in years of schooling.</dd>
+
+                <dt>Subject</dt>
+                <dd>SNP rs9320913</dd>
+
+                <dt>Predicate</dt>
+                <dd><span class="predicate">explains</span></dd>
+
+                <dt>Object</dt>
+                <dd>0.022% of phenotypic variance in years of schooling</dd>
+
+                <dt>Source</dt>
+                <dd class="source-cite">Rietveld et al., 2013. <em>Science</em> 340(6139), 1467&ndash;1471. <a href="https://doi.org/10.1126/science.1235488">doi.org/10.1126/science.1235488</a></dd>
+
+                <dt>Section</dt>
+                <dd>Results</dd>
+
+                <dt>Evidence</dt>
+                <dd>GWAS replication, <em>n</em> = 25,490</dd>
+
+                <dt>Confidence</dt>
+                <dd><span class="conf-dot"></span>HIGH</dd>
+              </dl>
+            </div>
+          </div>
+
         </div>
-      </div>
-      <div class="ref-strip">
-        <p>WIPO 2025 · Labelbox (Cognitive Revolution, Jul 2025) · Sacra (Surge AI, Scale AI) · TechCrunch (Mercor, Oct 2025).</p>
+
+        <!-- Bottom counter strip: signals there's volume behind the one example. -->
+        <div class="artifact-counter">30 claims extracted from this paper &middot; 1 shown</div>
       </div>
       <div class="footer-tab t-meta"></div>
       <div class="footer-page t-counter"></div>
@@ -1502,36 +1882,43 @@ em { font-style: italic; font-weight: inherit; }
     </section>
 
     <!-- ================================================================
-         SLIDE 8 — COMPUTABLE CONFIDENCE
+         SLIDE 8 — WHY BITTENSOR
          ================================================================ -->
-    <section class="slide" data-section="05 · Unique Signal" data-page="08">
-      <h2 class="slide-title t-title">Computable confidence — the missing layer.</h2>
-      <div class="content" style="display:flex; flex-direction:column; justify-content:center; padding-bottom: 160px;">
-
-        <div style="margin-bottom: var(--space-4xl);">
-          <h3 style="font: 300 56px/1.15 var(--font-family); color: var(--color-ink); letter-spacing: -0.005em;">
-            Extraction uncertainty.
-          </h3>
-          <div style="font: 400 32px/1.4 var(--font-family); color: var(--color-graphite); margin-top: var(--space-md);">
-            Many extractors. Calibrated against gold data.
-          </div>
-        </div>
-
-        <div>
-          <h3 style="font: 300 56px/1.15 var(--font-family); color: var(--color-ink); letter-spacing: -0.005em;">
-            Source uncertainty.
-          </h3>
-          <div style="font: 400 32px/1.4 var(--font-family); color: var(--color-graphite); margin-top: var(--space-md);">
-            Replication, p-hacking, file drawer.<sup style="color: var(--color-claims-blue); font-size: 60%; font-weight: 500;">1&ndash;4</sup>
-          </div>
-        </div>
-
+    <section class="slide" data-section="05 · Why Bittensor" data-page="08">
+      <h2 class="slide-title t-title">Why Bittensor.</h2>
+      <div class="content" style="display:flex; flex-direction:column; justify-content:center; padding-bottom: 130px;">
+        <ul class="bittensor-list">
+          <li>
+            <div class="head">
+              <span class="rule"></span>
+              <span class="copy">
+                <strong>Sharper signal.</strong>
+                <span class="sub">Extractor diversity → calibrated confidence per claim.</span>
+              </span>
+            </div>
+          </li>
+          <li>
+            <div class="head">
+              <span class="rule"></span>
+              <span class="copy">
+                <strong>Capital efficiency.</strong>
+                <span class="sub">Token-funded vs. centrally-funded data curation.</span>
+              </span>
+            </div>
+          </li>
+          <li>
+            <div class="head">
+              <span class="rule"></span>
+              <span class="copy">
+                <strong>Open competition compounds quality.</strong>
+                <span class="sub">Incentive design.</span>
+              </span>
+            </div>
+          </li>
+        </ul>
       </div>
-      <div class="ref-strip">
-        <p><sup style="color: var(--color-claims-blue); font-size: 75%; font-weight: 500;">1</sup>&nbsp;Open Science Collaboration (2015): Estimating the reproducibility of psychological science. <em>Science</em> 349(6251). <a href="https://www.science.org/doi/10.1126/science.aac4716" style="color: var(--color-claims-blue); text-decoration: underline;">https://www.science.org/doi/10.1126/science.aac4716</a></p>
-        <p style="margin-top: 8px;"><sup style="color: var(--color-claims-blue); font-size: 75%; font-weight: 500;">2</sup>&nbsp;Prinz et al. (2011): Believe it or not: how much can we rely on published data on potential drug targets? <em>Nature Reviews Drug Discovery</em> 10(712). <a href="https://www.nature.com/articles/nrd3439-c1" style="color: var(--color-claims-blue); text-decoration: underline;">https://www.nature.com/articles/nrd3439-c1</a></p>
-        <p style="margin-top: 8px;"><sup style="color: var(--color-claims-blue); font-size: 75%; font-weight: 500;">3</sup>&nbsp;Baker (2016): Biotech giant publishes failures to confirm high-profile science. <em>Nature</em> 530(141). <a href="https://www.nature.com/articles/nature.2016.19269" style="color: var(--color-claims-blue); text-decoration: underline;">https://www.nature.com/articles/nature.2016.19269</a></p>
-        <p style="margin-top: 8px;"><sup style="color: var(--color-claims-blue); font-size: 75%; font-weight: 500;">4</sup>&nbsp;Ioannidis (2005): Why most published research findings are false. <em>PLoS Medicine</em> 19(8), e1004085. <a href="https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124" style="color: var(--color-claims-blue); text-decoration: underline;">https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124</a></p>
+      <div class="takeaway" style="text-align: left; bottom: 200px; font-size: 28px; font-style: italic; color: #B87333; letter-spacing: 0.04em;">
+        Data quality is the only thing that matters. Bittensor is where it compounds.
       </div>
       <div class="footer-tab t-meta"></div>
       <div class="footer-page t-counter"></div>
@@ -1539,44 +1926,189 @@ em { font-style: italic; font-weight: inherit; }
     </section>
 
     <!-- ================================================================
-         SLIDE 9 — INNER LOOP (Miner–Validator cycle)
+         SLIDE 9 — WORKFLOW
+         Replaced the abstract Inner Loop diagram on 2026-06-01.
+         Three concrete stages (Assign · Extract · Score) with explicit
+         miner/validator identities (V_1, M_1, M_2, M_3) and a copper
+         "Gold sets" accent feeding the validator's reference model.
+         The fourth step (Reward) was dropped per user direction —
+         rewards flow naturally from the scores and do not add new info.
          ================================================================ -->
-    <section class="slide" data-section="06 · Inner Loop" data-page="09">
-      <h2 class="slide-title t-title">Inner loop.</h2>
+    <section class="slide" data-section="06 · Workflow" data-page="09">
+      <h2 class="slide-title t-title">Workflow.</h2>
       <div class="content">
-        <div class="loop-stage">
-          <svg class="loop-arcs" viewBox="0 0 1712 720" preserveAspectRatio="xMidYMid meet">
-            <defs>
-              <marker id="loop-arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="14" markerHeight="14" orient="auto">
-                <path d="M 0,0 L 12,6 L 0,12 Z" fill="#0B1220"/>
-              </marker>
-            </defs>
-            <!-- Top half-circle arc, Miners (9 o'clock) → 12 → Validators (3 o'clock). True circular arc via SVG elliptical-arc command with rx=ry=224 (chord 448 = diameter, perfect half-circle). Diameter shrunk a further ~20% from the previous 560 — total reduction from the original 800 is ~44%. Top arc chord at y=240; peak at viewBox y=16, well inside the viewBox (slide y=256, comfortably below the title at slide y≤192). -->
-            <path d="M 632,240 A 224,224 0 0 1 1080,240" fill="none" stroke="#0B1220" stroke-width="2.5" marker-end="url(#loop-arrow)"/>
-            <!-- Bottom half-circle, Validators → 6 → Miners. Mirrors the top: endpoints at y=320, peak at viewBox y=544. The 80px vertical gap between top-arc endpoint (y=240) and bottom-arc endpoint (y=320) means the two arcs never touch — the role-name sits centered in that gap. -->
-            <path d="M 1080,320 A 224,224 0 0 1 632,320" fill="none" stroke="#0B1220" stroke-width="2.5" marker-end="url(#loop-arrow)"/>
-          </svg>
+        <svg class="workflow-svg" viewBox="0 0 1712 720" preserveAspectRatio="xMidYMid meet" style="width: 100%; height: 100%; display: block;">
+          <defs>
+            <marker id="wf-arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="14" markerHeight="14" orient="auto">
+              <path d="M 0,0 L 12,6 L 0,12 Z" fill="#0B1220"/>
+            </marker>
+          </defs>
 
-          <div class="role role-left">
-            <h3 class="role-name">Miners</h3>
-            <ul class="role-attrs">
-              <li>Source</li>
-              <li>Claim-evidence</li>
-              <li>Concept binding</li>
-              <li>Judgment</li>
-            </ul>
-          </div>
+          <!-- ============================================================
+               Three-stage layout. Column centers at x=264, 856, 1448
+               (3 equal 528-wide columns separated by 64px gaps inside
+               the 1712-wide content area).
+               Eyebrows (top) and captions (bottom) are text-anchored
+               at column centers. Graphic vertical band: y=180..460,
+               centered around y=320. Eyebrow y=88. Caption y=586.
+               ============================================================ -->
 
-          <div class="role role-right">
-            <h3 class="role-name">Validators</h3>
-            <ul class="role-attrs">
-              <li>Assign</li>
-              <li>Verify</li>
-              <li>Gold set</li>
-              <li>Calibrate</li>
-            </ul>
-          </div>
-        </div>
+          <!-- ============ STAGE 01 · ASSIGN ============ -->
+          <g>
+            <text x="264" y="88" font-family="Inter, sans-serif" font-size="30" font-weight="500" fill="#4A5160" letter-spacing="0.14em" text-anchor="middle">01 &middot; ASSIGN</text>
+
+            <!-- Validator V_1 polyhedron at left of column, centered y=320 -->
+            <g transform="translate(140, 320)">
+              <polygon points="0,-46 40,-23 40,23 0,46 -40,23 -40,-23" fill="#0B1220"/>
+              <line x1="0" y1="-46" x2="0" y2="46" stroke="#4A5160" stroke-width="0.6"/>
+              <line x1="-40" y1="-23" x2="40" y2="23" stroke="#4A5160" stroke-width="0.6"/>
+              <line x1="-40" y1="23" x2="40" y2="-23" stroke="#4A5160" stroke-width="0.6"/>
+              <text x="0" y="11" font-family="'KaTeX_Math', 'Cambria Math', 'Georgia', serif" font-style="italic" font-size="32" fill="#FAFAF7" text-anchor="middle">V<tspan font-size="20" dy="7">1</tspan></text>
+            </g>
+
+            <!-- 3 fan-out arrows from validator (right edge x=190) to miners (left edge x=360) -->
+            <g stroke="#0B1220" stroke-width="2.5" fill="none" marker-end="url(#wf-arrow)">
+              <line x1="190" y1="200" x2="350" y2="200"/>
+              <line x1="190" y1="320" x2="350" y2="320"/>
+              <line x1="190" y1="440" x2="350" y2="440"/>
+            </g>
+
+            <!-- Paper glyphs riding the arrows -->
+            <g stroke="#0B1220" stroke-width="1.2" fill="#FAFAF7">
+              <rect x="255" y="184" width="24" height="32" rx="1"/>
+              <line x1="261" y1="194" x2="273" y2="194" stroke="#4A5160" stroke-width="0.8"/>
+              <line x1="261" y1="200" x2="273" y2="200" stroke="#C8C7C0" stroke-width="0.8"/>
+              <line x1="261" y1="206" x2="269" y2="206" stroke="#C8C7C0" stroke-width="0.8"/>
+              <rect x="255" y="304" width="24" height="32" rx="1"/>
+              <line x1="261" y1="314" x2="273" y2="314" stroke="#4A5160" stroke-width="0.8"/>
+              <line x1="261" y1="320" x2="273" y2="320" stroke="#C8C7C0" stroke-width="0.8"/>
+              <line x1="261" y1="326" x2="269" y2="326" stroke="#C8C7C0" stroke-width="0.8"/>
+              <rect x="255" y="424" width="24" height="32" rx="1"/>
+              <line x1="261" y1="434" x2="273" y2="434" stroke="#4A5160" stroke-width="0.8"/>
+              <line x1="261" y1="440" x2="273" y2="440" stroke="#C8C7C0" stroke-width="0.8"/>
+              <line x1="261" y1="446" x2="269" y2="446" stroke="#C8C7C0" stroke-width="0.8"/>
+            </g>
+
+            <!-- Miner labels M_1, M_2, M_3 -->
+            <g font-family="'KaTeX_Math', 'Cambria Math', 'Georgia', serif" font-style="italic" font-size="38" fill="#0B1220" text-anchor="middle">
+              <text x="395" y="214">M<tspan font-size="22" dy="8">1</tspan></text>
+              <text x="395" y="334">M<tspan font-size="22" dy="8">2</tspan></text>
+              <text x="395" y="454">M<tspan font-size="22" dy="8">3</tspan></text>
+            </g>
+
+            <text x="264" y="586" font-family="Inter, sans-serif" font-size="28" font-weight="400" fill="#4A5160" text-anchor="middle">Paper &rarr; competing miners</text>
+          </g>
+
+          <!-- ============ STAGE 02 · EXTRACT ============ -->
+          <g>
+            <text x="856" y="88" font-family="Inter, sans-serif" font-size="30" font-weight="500" fill="#4A5160" letter-spacing="0.14em" text-anchor="middle">02 &middot; EXTRACT</text>
+
+            <!-- Miner labels on the left of the stage -->
+            <g font-family="'KaTeX_Math', 'Cambria Math', 'Georgia', serif" font-style="italic" font-size="38" fill="#0B1220" text-anchor="middle">
+              <text x="680" y="214">M<tspan font-size="22" dy="8">1</tspan></text>
+              <text x="680" y="334">M<tspan font-size="22" dy="8">2</tspan></text>
+              <text x="680" y="454">M<tspan font-size="22" dy="8">3</tspan></text>
+            </g>
+
+            <!-- Arrows from miners to schema records -->
+            <g stroke="#0B1220" stroke-width="2.5" fill="none" marker-end="url(#wf-arrow)">
+              <line x1="715" y1="200" x2="800" y2="200"/>
+              <line x1="715" y1="320" x2="800" y2="320"/>
+              <line x1="715" y1="440" x2="800" y2="440"/>
+            </g>
+
+            <!-- 3 schema cards (callback to Slide 7 record style) -->
+            <g>
+              <g transform="translate(820, 168)">
+                <rect width="232" height="64" rx="3" fill="#FBF9F2" stroke="#0B1220" stroke-width="1.5"/>
+                <text x="16" y="26" font-family="Inter, sans-serif" font-size="13" font-weight="500" fill="#4A5160" letter-spacing="0.14em">CLAIM</text>
+                <line x1="16" y1="38" x2="110" y2="38" stroke="#4A5160" stroke-width="2"/>
+                <line x1="16" y1="50" x2="200" y2="50" stroke="#C8C7C0" stroke-width="2"/>
+              </g>
+              <g transform="translate(820, 288)">
+                <rect width="232" height="64" rx="3" fill="#FBF9F2" stroke="#0B1220" stroke-width="1.5"/>
+                <text x="16" y="26" font-family="Inter, sans-serif" font-size="13" font-weight="500" fill="#4A5160" letter-spacing="0.14em">CLAIM</text>
+                <line x1="16" y1="38" x2="110" y2="38" stroke="#4A5160" stroke-width="2"/>
+                <line x1="16" y1="50" x2="200" y2="50" stroke="#C8C7C0" stroke-width="2"/>
+              </g>
+              <g transform="translate(820, 408)">
+                <rect width="232" height="64" rx="3" fill="#FBF9F2" stroke="#0B1220" stroke-width="1.5"/>
+                <text x="16" y="26" font-family="Inter, sans-serif" font-size="13" font-weight="500" fill="#4A5160" letter-spacing="0.14em">CLAIM</text>
+                <line x1="16" y1="38" x2="110" y2="38" stroke="#4A5160" stroke-width="2"/>
+                <line x1="16" y1="50" x2="200" y2="50" stroke="#C8C7C0" stroke-width="2"/>
+              </g>
+            </g>
+
+            <text x="856" y="586" font-family="Inter, sans-serif" font-size="28" font-weight="400" fill="#4A5160" text-anchor="middle">Claims &middot; evidence &middot; judgment</text>
+          </g>
+
+          <!-- ============ STAGE 03 · SCORE ============ -->
+          <g>
+            <text x="1448" y="88" font-family="Inter, sans-serif" font-size="30" font-weight="500" fill="#4A5160" letter-spacing="0.14em" text-anchor="middle">03 &middot; SCORE</text>
+
+            <!-- Gold sets annotation feeding into validator (copper italic, dashed line) -->
+            <g>
+              <text x="1500" y="172" font-family="Inter, sans-serif" font-size="22" font-style="italic" fill="#B87333" text-anchor="middle" letter-spacing="0.04em">Gold sets</text>
+              <path d="M 1500,186 L 1500,260" stroke="#B87333" stroke-width="1.5" fill="none" stroke-dasharray="4 4"/>
+              <polygon points="1500,275 1493,261 1507,261" fill="#B87333"/>
+            </g>
+
+            <!-- 3 incoming records (smaller, left of stage). Middle one = "winner" with copper outline. -->
+            <g>
+              <g transform="translate(1240, 174)">
+                <rect width="130" height="56" rx="3" fill="#FBF9F2" stroke="#0B1220" stroke-width="1.2"/>
+                <text x="12" y="22" font-family="Inter, sans-serif" font-size="11" font-weight="500" fill="#4A5160" letter-spacing="0.14em">CLAIM</text>
+                <line x1="12" y1="32" x2="80" y2="32" stroke="#4A5160" stroke-width="1.8"/>
+                <line x1="12" y1="44" x2="112" y2="44" stroke="#C8C7C0" stroke-width="1.6"/>
+              </g>
+              <g transform="translate(1240, 294)">
+                <rect width="130" height="56" rx="3" fill="#FBF9F2" stroke="#B87333" stroke-width="2.5"/>
+                <text x="12" y="22" font-family="Inter, sans-serif" font-size="11" font-weight="500" fill="#4A5160" letter-spacing="0.14em">CLAIM</text>
+                <line x1="12" y1="32" x2="80" y2="32" stroke="#4A5160" stroke-width="1.8"/>
+                <line x1="12" y1="44" x2="112" y2="44" stroke="#C8C7C0" stroke-width="1.6"/>
+              </g>
+              <g transform="translate(1240, 414)">
+                <rect width="130" height="56" rx="3" fill="#FBF9F2" stroke="#0B1220" stroke-width="1.2"/>
+                <text x="12" y="22" font-family="Inter, sans-serif" font-size="11" font-weight="500" fill="#4A5160" letter-spacing="0.14em">CLAIM</text>
+                <line x1="12" y1="32" x2="80" y2="32" stroke="#4A5160" stroke-width="1.8"/>
+                <line x1="12" y1="44" x2="112" y2="44" stroke="#C8C7C0" stroke-width="1.6"/>
+              </g>
+            </g>
+
+            <!-- Converging arrows from records to validator -->
+            <g stroke="#0B1220" stroke-width="2" fill="none" marker-end="url(#wf-arrow)">
+              <path d="M 1370,202 Q 1410,202 1450,300"/>
+              <path d="M 1370,322 L 1450,322"/>
+              <path d="M 1370,442 Q 1410,442 1450,344"/>
+            </g>
+
+            <!-- Validator V_1 in stage 3 -->
+            <g transform="translate(1500, 322)">
+              <polygon points="0,-46 40,-23 40,23 0,46 -40,23 -40,-23" fill="#0B1220"/>
+              <line x1="0" y1="-46" x2="0" y2="46" stroke="#4A5160" stroke-width="0.6"/>
+              <line x1="-40" y1="-23" x2="40" y2="23" stroke="#4A5160" stroke-width="0.6"/>
+              <line x1="-40" y1="23" x2="40" y2="-23" stroke="#4A5160" stroke-width="0.6"/>
+              <text x="0" y="11" font-family="'KaTeX_Math', 'Cambria Math', 'Georgia', serif" font-style="italic" font-size="32" fill="#FAFAF7" text-anchor="middle">V<tspan font-size="20" dy="7">1</tspan></text>
+            </g>
+
+            <!-- Output arrow to canonical graph node -->
+            <g stroke="#0B1220" stroke-width="2.5" fill="none" marker-end="url(#wf-arrow)">
+              <line x1="1546" y1="322" x2="1600" y2="322"/>
+            </g>
+
+            <!-- Canonical graph icon (3 nodes + edges) -->
+            <g transform="translate(1645, 322)" fill="#0B1220" stroke="#0B1220" stroke-width="1.5">
+              <line x1="0" y1="-18" x2="-18" y2="16"/>
+              <line x1="0" y1="-18" x2="18" y2="16"/>
+              <line x1="-18" y1="16" x2="18" y2="16"/>
+              <circle cx="0" cy="-18" r="8"/>
+              <circle cx="-18" cy="16" r="8"/>
+              <circle cx="18" cy="16" r="8"/>
+            </g>
+
+            <text x="1448" y="586" font-family="Inter, sans-serif" font-size="28" font-weight="400" fill="#4A5160" text-anchor="middle">Reference model + gold sets</text>
+          </g>
+        </svg>
       </div>
       <div class="footer-tab t-meta"></div>
       <div class="footer-page t-counter"></div>
@@ -1584,38 +2116,154 @@ em { font-style: italic; font-weight: inherit; }
     </section>
 
     <!-- ================================================================
-         SLIDE 10 — INCENTIVE MECHANISM (Reward function + variable legend)
+         SLIDE 10 — PRINCIPLED INCENTIVE DESIGN (PID table)
+         Preview of the mechanism design philosophy: for every target miner
+         behavior we want, we build a separate independent channel to measure
+         it, and then attach a reward and weight to that channel. Visual is a
+         four-column table — Behavior · Channel · Observed information ·
+         Reward — with three rows (Complete coverage / Accurate extraction /
+         Reliable evaluation). The fourth row from the source illustration
+         (04 Calibrated prediction) was deliberately dropped per user direction:
+         the three-row form keeps the slide tight, and the prediction channel
+         lives in the appendix Incentive Mechanism slide (A.03) for any audience
+         that asks. Reference image: Logos and pictures/pid.png. The on-deck
+         subtitle ("Target behavior first…") from the source is also dropped —
+         the table already encodes that argument left-to-right.
          ================================================================ -->
-    <section class="slide" data-section="07 · Incentive Mechanism" data-page="10">
-      <h2 class="slide-title t-title">Incentive mechanism.</h2>
-      <div class="content">
-        <div class="incentive-grid">
-          <!-- Left half: reward function in LaTeX, rendered by KaTeX auto-render -->
-          <div class="incentive-formula">
-            \[
-            \begin{aligned}
-            R_m ={}& \lambda_A S_A \\
-            &+ \lambda_B G_A S_B \\
-            &+ \lambda_C G_A G_B S_C \\
-            &+ \lambda_D G_A G_B G_C S_D \\
-            &- P_{spam} - P_{collusion} - P_{reset}.
-            \end{aligned}
-            \]
+    <section class="slide" data-section="07 · Mechanism" data-page="10">
+      <h2 class="slide-title t-title">Principled Incentive Design.</h2>
+      <div class="content" style="display: flex; align-items: center;">
+        <div class="pid-grid">
+
+          <!-- Column headers (7 cells: num-gutter, Behavior, arrow-gap, Observed, arrow-gap, Reward, mirror-gutter) -->
+          <div></div>
+          <div class="pid-header-cell">Behavior</div>
+          <div></div>
+          <div class="pid-header-cell">Observed information</div>
+          <div></div>
+          <div class="pid-header-cell">Reward</div>
+          <div></div>
+
+          <!-- Row 01 — Complete coverage. No gate above: this is the foundation. -->
+          <div class="pid-num">01</div>
+          <div class="pid-cell">
+            <svg class="pid-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="11" y="5" width="20" height="22" rx="1.5"/>
+              <rect x="6" y="9" width="20" height="22" rx="1.5" fill="#FFFFFF"/>
+              <line x1="10" y1="16" x2="22" y2="16"/>
+              <line x1="10" y1="21" x2="22" y2="21"/>
+              <line x1="10" y1="26" x2="18" y2="26"/>
+            </svg>
+            Complete coverage
+          </div>
+          <div class="pid-arrow"><svg viewBox="0 0 48 14" preserveAspectRatio="xMidYMid meet"><line x1="0" y1="7" x2="38" y2="7" stroke="#4A5160" stroke-width="1.5"/><path d="M 48,7 L 36,2 L 36,12 Z" fill="#4A5160"/></svg></div>
+          <div class="pid-cell">
+            <svg class="pid-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <circle cx="9" cy="11" r="2" fill="currentColor" stroke="none"/>
+              <line x1="14" y1="11" x2="31" y2="11"/>
+              <circle cx="9" cy="19" r="2" fill="currentColor" stroke="none"/>
+              <line x1="14" y1="19" x2="31" y2="19"/>
+              <circle cx="9" cy="27" r="2" fill="currentColor" stroke="none"/>
+              <line x1="14" y1="27" x2="26" y2="27"/>
+            </svg>
+            Claims and sections
+          </div>
+          <div class="pid-arrow"><svg viewBox="0 0 48 14" preserveAspectRatio="xMidYMid meet"><line x1="0" y1="7" x2="38" y2="7" stroke="#4A5160" stroke-width="1.5"/><path d="M 48,7 L 36,2 L 36,12 Z" fill="#4A5160"/></svg></div>
+          <div class="pid-cell">
+            <svg class="pid-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <!-- Two unequal coin stacks: left short (2 coins), right tall (3 coins), shared baseline at y=29 -->
+              <ellipse cx="28" cy="10" rx="6" ry="2"/>
+              <path d="M 22 10 L 22 14 C 22 16 24.5 17 28 17 C 31.5 17 34 16 34 14 L 34 10"/>
+              <path d="M 22 16 L 22 20 C 22 22 24.5 23 28 23 C 31.5 23 34 22 34 20 L 34 16"/>
+              <path d="M 22 22 L 22 26 C 22 28 24.5 29 28 29 C 31.5 29 34 28 34 26 L 34 22"/>
+              <ellipse cx="9" cy="16" rx="6" ry="2"/>
+              <path d="M 3 16 L 3 20 C 3 22 5.5 23 9 23 C 12.5 23 15 22 15 20 L 15 16"/>
+              <path d="M 3 22 L 3 26 C 3 28 5.5 29 9 29 C 12.5 29 15 28 15 26 L 15 22"/>
+            </svg>
+            More content visited
+          </div>
+          <div></div>
+
+          <!-- Dependency gate: row 02 reward conditional on row 01 passing -->
+          <div class="pid-gate">
+            <div class="pid-gate-line"></div>
+            <span class="pid-gate-text">01 must pass</span>
+            <div class="pid-gate-line"></div>
           </div>
 
-          <!-- Right half: variable legend. dt/dd pairs sit as direct children of the grid <dl> so the CSS grid lays each symbol in column 1 and each description in column 2 of the same row. Each variable is wrapped in \(...\) so KaTeX renders it in math italic with matching glyph style. -->
-          <div class="incentive-vars">
-            <dl>
-              <dt>\(R_m\)</dt><dd>Reward for miner \(m\)</dd>
-              <dt>\(A\)</dt><dd>Source integrity and coverage</dd>
-              <dt>\(B\)</dt><dd>Atomic extraction</dd>
-              <dt>\(C\)</dt><dd>Claim graph construction</dd>
-              <dt>\(D\)</dt><dd>Evidence judgment and prediction</dd>
-              <dt>\(\lambda\)</dt><dd>Task weight</dd>
-              <dt>\(G\)</dt><dd>Gate weight</dd>
-              <dt>\(S\)</dt><dd>Task score</dd>
-            </dl>
+          <!-- Row 02 — Accurate extraction -->
+          <div class="pid-num">02</div>
+          <div class="pid-cell">
+            <svg class="pid-icon" viewBox="0 0 38 38" fill="currentColor" stroke="none">
+              <path d="M 7 24 L 7 16 C 7 12 9 9 14 9 L 14 13 C 11 13 10 14 10 16 L 14 16 L 14 24 Z"/>
+              <path d="M 22 24 L 22 16 C 22 12 24 9 29 9 L 29 13 C 26 13 25 14 25 16 L 29 16 L 29 24 Z"/>
+            </svg>
+            Accurate extraction
           </div>
+          <div class="pid-arrow"><svg viewBox="0 0 48 14" preserveAspectRatio="xMidYMid meet"><line x1="0" y1="7" x2="38" y2="7" stroke="#4A5160" stroke-width="1.5"/><path d="M 48,7 L 36,2 L 36,12 Z" fill="#4A5160"/></svg></div>
+          <div class="pid-cell">
+            <svg class="pid-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M 14 12 L 9 12 C 6 12 4 15 4 18 C 4 21 6 24 9 24 L 14 24"/>
+              <path d="M 24 12 L 29 12 C 32 12 34 15 34 18 C 34 21 32 24 29 24 L 24 24"/>
+              <line x1="13" y1="18" x2="25" y2="18"/>
+            </svg>
+            Detail and understanding
+          </div>
+          <div class="pid-arrow"><svg viewBox="0 0 48 14" preserveAspectRatio="xMidYMid meet"><line x1="0" y1="7" x2="38" y2="7" stroke="#4A5160" stroke-width="1.5"/><path d="M 48,7 L 36,2 L 36,12 Z" fill="#4A5160"/></svg></div>
+          <div class="pid-cell">
+            <svg class="pid-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="19" cy="19" r="11"/>
+              <polyline points="13,19 17,23 25,15"/>
+            </svg>
+            Meaning, numbers, provenance
+          </div>
+          <div></div>
+
+          <!-- Dependency gate: row 03 reward conditional on rows 01 + 02 passing -->
+          <div class="pid-gate">
+            <div class="pid-gate-line"></div>
+            <span class="pid-gate-text">01 + 02 must pass</span>
+            <div class="pid-gate-line"></div>
+          </div>
+
+          <!-- Row 03 — Evidence judgment -->
+          <div class="pid-num">03</div>
+          <div class="pid-cell">
+            <svg class="pid-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="19" y1="7" x2="19" y2="30"/>
+              <line x1="6" y1="11" x2="32" y2="11"/>
+              <path d="M 7 11 L 3 19 L 11 19 Z"/>
+              <path d="M 31 11 L 27 19 L 35 19 Z"/>
+              <line x1="13" y1="30" x2="25" y2="30"/>
+              <circle cx="19" cy="9" r="1.5" fill="currentColor" stroke="none"/>
+            </svg>
+            Evidence evaluation
+          </div>
+          <div class="pid-arrow"><svg viewBox="0 0 48 14" preserveAspectRatio="xMidYMid meet"><line x1="0" y1="7" x2="38" y2="7" stroke="#4A5160" stroke-width="1.5"/><path d="M 48,7 L 36,2 L 36,12 Z" fill="#4A5160"/></svg></div>
+          <div class="pid-cell">
+            <svg class="pid-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="8" y="5" width="22" height="28" rx="1.5"/>
+              <line x1="12" y1="13" x2="20" y2="13"/>
+              <line x1="12" y1="17" x2="24" y2="17"/>
+              <polyline points="14,24 18,28 26,20"/>
+            </svg>
+            Confidence vote and reasoning
+          </div>
+          <div class="pid-arrow"><svg viewBox="0 0 48 14" preserveAspectRatio="xMidYMid meet"><line x1="0" y1="7" x2="38" y2="7" stroke="#4A5160" stroke-width="1.5"/><path d="M 48,7 L 36,2 L 36,12 Z" fill="#4A5160"/></svg></div>
+          <div class="pid-cell">
+            <svg class="pid-icon" viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <!-- Three figures (heads + shoulders) representing individual opinions -->
+              <circle cx="9" cy="14" r="3.5"/>
+              <path d="M 3 28 C 3 23 5.5 20.5 9 20.5 C 12.5 20.5 15 23 15 28"/>
+              <circle cx="19" cy="12" r="4"/>
+              <path d="M 12 28 C 12 22 15 19 19 19 C 23 19 26 22 26 28"/>
+              <circle cx="29" cy="14" r="3.5"/>
+              <path d="M 23 28 C 23 23 25.5 20.5 29 20.5 C 32.5 20.5 35 23 35 28"/>
+            </svg>
+            Contribution to opinions
+          </div>
+          <div></div>
+
         </div>
       </div>
       <div class="footer-tab t-meta"></div>
@@ -1624,7 +2272,7 @@ em { font-style: italic; font-weight: inherit; }
     </section>
 
     <!-- ================================================================
-         SLIDE 11 — THE PRODUCT (Bowtie architecture · Centerpiece)
+         SLIDE 10 — THE PRODUCT (Bowtie architecture · Centerpiece)
          ================================================================ -->
     <section class="slide" data-section="08 · Product" data-page="11">
       <h2 class="slide-title t-title">The Product.</h2>
@@ -1646,7 +2294,7 @@ em { font-style: italic; font-weight: inherit; }
             <text x="800" y="80" text-anchor="middle" fill="#0B1220" font-weight="500" font-size="22">Defense R&amp;D</text>
             <circle cx="800" cy="104" r="6" fill="#2D4F8E"/>
 
-            <text x="1300" y="80" text-anchor="middle" fill="#0B1220" font-weight="500" font-size="22">Regulatory dossiers</text>
+            <text x="1300" y="80" text-anchor="middle" fill="#0B1220" font-weight="500" font-size="22">AI model training</text>
             <circle cx="1300" cy="104" r="6" fill="#2D4F8E"/>
           </g>
 
@@ -1664,8 +2312,8 @@ em { font-style: italic; font-weight: inherit; }
           <rect x="480" y="200" width="640" height="60" fill="#F7F5F0" stroke="#0B1220" stroke-width="1.5" rx="4"/>
           <text x="800" y="240" text-anchor="middle" fill="#0B1220" font-family="Inter" font-weight="500" font-size="20">Canonical claim-evidence database</text>
 
-          <!-- API · MCP access tag to the right of the band -->
-          <text x="1140" y="237" fill="#0B1220" font-family="Inter" font-weight="500" font-size="14" letter-spacing="0.14em" style="text-transform: uppercase;">API &middot; MCP</text>
+          <!-- API · MCP · applications access tag to the right of the band -->
+          <text x="1140" y="237" fill="#0B1220" font-family="Inter" font-weight="500" font-size="14" letter-spacing="0.14em" style="text-transform: uppercase;">API &middot; MCP &middot; applications</text>
 
           <!-- Converging lines from miner dots UP to the canonical DB band -->
           <g stroke="#B5BAC4" stroke-width="1" fill="none">
@@ -1703,7 +2351,7 @@ em { font-style: italic; font-weight: inherit; }
 
         </svg>
 
-        <!-- Answer for Simon: concrete output the architecture produces. Two sentences, both italicized; compound names (5-MeO-DMT, Psilocin) wrapped in <em> for the brand-convention emphasis. Pushed to the bottom of the content area via justify-content: space-evenly on the parent. -->
+        <!-- Answer for Simon: concrete output the architecture produces. Two sentences, both italicized; compound names (5-MeO-DMT, Psilocin) wrapped in <em> for the brand-convention emphasis. Psilocin (not psilocybin) is the technically correct molecule here because the sentence names its 5-HT2A receptor binding — psilocybin is the prodrug, psilocin is the active metabolite that actually binds the receptor. Pushed to the bottom of the content area via justify-content: space-evenly on the parent. -->
         <div>
           <div style="font: 500 14px/1 var(--font-family); letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-claims-blue); margin-bottom: 12px;">Answer for Simon</div>
           <div style="font: 400 italic 28px/1.35 var(--font-family); color: var(--color-ink); max-width: 1650px;">
@@ -1720,43 +2368,54 @@ em { font-style: italic; font-weight: inherit; }
     </section>
 
     <!-- ================================================================
-         SLIDE 12 — WHY BITTENSOR
+         SLIDE 11 — MARKET (Metric tile composition)
          ================================================================ -->
-    <section class="slide" data-section="09 · Why Bittensor" data-page="12">
-      <h2 class="slide-title t-title">Why Bittensor.</h2>
-      <div class="content" style="display:flex; flex-direction:column; justify-content:center; padding-bottom: 130px;">
-        <ul class="bittensor-list">
-          <li>
-            <div class="head">
-              <span class="rule"></span>
-              <span class="copy">
-                <strong>Sharper signal.</strong>
-                <span class="sub">Extractor diversity → calibrated confidence per claim.</span>
-              </span>
+    <section class="slide" data-section="09 · Market" data-page="12">
+      <h2 class="slide-title t-title">Market.</h2>
+      <div class="content" style="display:flex; flex-direction:column; justify-content:center;">
+        <div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: flex-start; width: 100%; column-gap: 60px;">
+
+          <div class="tile" style="justify-self: start;">
+            <div class="tile-top"><div class="tile-rule"></div></div>
+            <div class="tile-numeral">$20–50B</div>
+            <div class="tile-label">R&amp;D intelligence and evidence work</div>
+            <div class="tile-delta pos">+5% / yr</div>
+          </div>
+
+          <div class="claims-hub">
+            <div class="tile-top">
+              <svg width="300" height="80" viewBox="0 0 300 80">
+                <!-- Left arrow flowing in toward the polyhedron, line at the same y as the tile rules -->
+                <line x1="10" y1="40" x2="106" y2="40" stroke="#2D4F8E" stroke-width="2.5"/>
+                <polygon points="116,40 104,33 104,47" fill="#2D4F8E"/>
+
+                <!-- Center polyhedron — callback to cover artwork, sitting at the rule-line y -->
+                <g transform="translate(150, 40)">
+                  <polygon points="0,-26 22,-13 22,13 0,26 -22,13 -22,-13" fill="#0B1220"/>
+                  <line x1="0" y1="-26" x2="0" y2="26" stroke="#4A5160" stroke-width="0.6"/>
+                  <line x1="-22" y1="-13" x2="22" y2="13" stroke="#4A5160" stroke-width="0.6"/>
+                  <line x1="-22" y1="13" x2="22" y2="-13" stroke="#4A5160" stroke-width="0.6"/>
+                  <circle cx="0" cy="0" r="2" fill="#FFFFFF" opacity="0.5"/>
+                </g>
+
+                <!-- Right arrow flowing in toward the polyhedron -->
+                <line x1="194" y1="40" x2="290" y2="40" stroke="#2D4F8E" stroke-width="2.5"/>
+                <polygon points="184,40 196,33 196,47" fill="#2D4F8E"/>
+              </svg>
             </div>
-          </li>
-          <li>
-            <div class="head">
-              <span class="rule"></span>
-              <span class="copy">
-                <strong>Capital efficiency.</strong>
-                <span class="sub">Token-funded vs. centrally-funded data curation.</span>
-              </span>
-            </div>
-          </li>
-          <li>
-            <div class="head">
-              <span class="rule"></span>
-              <span class="copy">
-                <strong>Open competition compounds quality.</strong>
-                <span class="sub">Incentive design.</span>
-              </span>
-            </div>
-          </li>
-        </ul>
+            <div class="hub-wordmark">Claims</div>
+          </div>
+
+          <div class="tile" style="justify-self: end;">
+            <div class="tile-top"><div class="tile-rule"></div></div>
+            <div class="tile-numeral">$5–9B</div>
+            <div class="tile-label">AI training data for scientific models</div>
+            <div class="tile-delta copper">+100% / yr</div>
+          </div>
+        </div>
       </div>
-      <div class="takeaway" style="text-align: left; bottom: 200px;">
-        Data quality is the only thing that matters. Bittensor is where it compounds.
+      <div class="ref-strip">
+        <p>WIPO 2025 · Labelbox (Cognitive Revolution, Jul 2025) · Sacra (Surge AI, Scale AI) · TechCrunch (Mercor, Oct 2025).</p>
       </div>
       <div class="footer-tab t-meta"></div>
       <div class="footer-page t-counter"></div>
@@ -1764,18 +2423,127 @@ em { font-style: italic; font-weight: inherit; }
     </section>
 
     <!-- ================================================================
-         SLIDE 13 — BUSINESS MODEL + MOAT
+         SLIDE 12 — CLOSING
          ================================================================ -->
-    <section class="slide" data-section="10 · Business Model" data-page="13">
+    <section class="slide closing" data-section="—">
+      <div class="hero-art"></div>
+      <div class="overlay"></div>
+      <div class="closing-quote">
+        <div class="quote-display">
+          <div class="qmark">&ldquo;</div>
+          <div class="qbody">
+            Frankly, we&rsquo;re skeptical that 42 is the answer.<br>
+            Claims will know.
+          </div>
+        </div>
+      </div>
+      <div class="closing-text">
+        <div class="closing-name">Prof. Dr. Philipp Koellinger</div>
+        <div class="closing-email">philipp@desci.com</div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         APPENDIX — slides moved out of the main flow on 2026-05-26.
+         Reachable via keyboard navigation past the closing slide.
+         ================================================================ -->
+
+    <!-- ================================================================
+         SLIDE 13 — COMPUTABLE CONFIDENCE (appendix · A.01)
+         ================================================================ -->
+    <section class="slide" data-section="Appendix · Unique Signal" data-page="A.01">
+      <h2 class="slide-title t-title">Computable confidence — the missing layer.</h2>
+      <div class="content" style="display:flex; flex-direction:column; justify-content:center; padding-bottom: 160px;">
+
+        <div style="margin-bottom: var(--space-4xl);">
+          <h3 style="font: 300 56px/1.15 var(--font-family); color: var(--color-ink); letter-spacing: -0.005em;">
+            Extraction uncertainty.
+          </h3>
+          <div style="font: 400 32px/1.4 var(--font-family); color: var(--color-graphite); margin-top: var(--space-md);">
+            Many extractors. Calibrated against gold data.
+          </div>
+        </div>
+
+        <div>
+          <h3 style="font: 300 56px/1.15 var(--font-family); color: var(--color-ink); letter-spacing: -0.005em;">
+            Source uncertainty.
+          </h3>
+          <div style="font: 400 32px/1.4 var(--font-family); color: var(--color-graphite); margin-top: var(--space-md);">
+            Replication, p-hacking, file drawer.<sup style="color: var(--color-claims-blue); font-size: 60%; font-weight: 500;">1&ndash;4</sup>
+          </div>
+        </div>
+
+      </div>
+      <div class="ref-strip">
+        <p><sup style="color: var(--color-claims-blue); font-size: 75%; font-weight: 500;">1</sup>&nbsp;Open Science Collaboration (2015): Estimating the reproducibility of psychological science. <em>Science</em> 349(6251). <a href="https://www.science.org/doi/10.1126/science.aac4716" style="color: var(--color-claims-blue); text-decoration: underline;">https://www.science.org/doi/10.1126/science.aac4716</a></p>
+        <p style="margin-top: 8px;"><sup style="color: var(--color-claims-blue); font-size: 75%; font-weight: 500;">2</sup>&nbsp;Prinz et al. (2011): Believe it or not: how much can we rely on published data on potential drug targets? <em>Nature Reviews Drug Discovery</em> 10(712). <a href="https://www.nature.com/articles/nrd3439-c1" style="color: var(--color-claims-blue); text-decoration: underline;">https://www.nature.com/articles/nrd3439-c1</a></p>
+        <p style="margin-top: 8px;"><sup style="color: var(--color-claims-blue); font-size: 75%; font-weight: 500;">3</sup>&nbsp;Baker (2016): Biotech giant publishes failures to confirm high-profile science. <em>Nature</em> 530(141). <a href="https://www.nature.com/articles/nature.2016.19269" style="color: var(--color-claims-blue); text-decoration: underline;">https://www.nature.com/articles/nature.2016.19269</a></p>
+        <p style="margin-top: 8px;"><sup style="color: var(--color-claims-blue); font-size: 75%; font-weight: 500;">4</sup>&nbsp;Ioannidis (2005): Why most published research findings are false. <em>PLoS Medicine</em> 19(8), e1004085. <a href="https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124" style="color: var(--color-claims-blue); text-decoration: underline;">https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124</a></p>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo"><span class="wordmark">Claims</span></div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 14 — INCENTIVE MECHANISM (appendix · A.02)
+         (Inner Loop was promoted to the main deck on 2026-05-29 as new
+         Slide 9; the appendix now skips that beat.)
+         ================================================================ -->
+    <section class="slide" data-section="Appendix · Incentive Mechanism" data-page="A.02">
+      <h2 class="slide-title t-title">Incentive mechanism.</h2>
+      <div class="content">
+        <div class="incentive-grid">
+          <!-- Left half: reward function in LaTeX, rendered by KaTeX auto-render.
+               Inline-block wrapper (.formula-stack) anchors the caption beneath
+               so its left edge aligns with R_m. -->
+          <div class="incentive-formula">
+            <div class="formula-stack">
+              \[
+              \begin{aligned}
+              R_m ={}& \lambda_A S_A \\
+              &+ \lambda_B G_A S_B \\
+              &+ \lambda_C G_A G_B S_C \\
+              &- P_{spam} - P_{collusion} - P_{reset}.
+              \end{aligned}
+              \]
+              <div class="formula-caption">Effort &middot; Sincerity &middot; Sybil resistance</div>
+            </div>
+          </div>
+
+          <!-- Right half: variable legend. dt/dd pairs sit as direct children of the grid <dl> so the CSS grid lays each symbol in column 1 and each description in column 2 of the same row. Each variable is wrapped in \(...\) so KaTeX renders it in math italic with matching glyph style. -->
+          <div class="incentive-vars">
+            <dl>
+              <dt>\(R_m\)</dt><dd>Reward for miner \(m\)</dd>
+              <dt>\(A\)</dt><dd>Complete coverage</dd>
+              <dt>\(B\)</dt><dd>Accurate extraction</dd>
+              <dt>\(C\)</dt><dd>Evidence evaluation</dd>
+              <dt>\(\lambda\)</dt><dd>Task weight</dd>
+              <dt>\(G\)</dt><dd>Gate weight</dd>
+              <dt>\(S\)</dt><dd>Task score</dd>
+              <dt>\(P\)</dt><dd>Penalty</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+      <div class="footer-tab t-meta"></div>
+      <div class="footer-page t-counter"></div>
+      <div class="footer-logo"><span class="wordmark">Claims</span></div>
+    </section>
+
+    <!-- ================================================================
+         SLIDE 16 — BUSINESS MODEL + MOAT (appendix · A.04)
+         ================================================================ -->
+    <section class="slide" data-section="Appendix · Business Model" data-page="A.03">
       <h2 class="slide-title t-title">How we monetize. How we keep it.</h2>
       <div class="content" style="display:flex; flex-direction:column; justify-content:flex-start; padding-top: 100px;">
         <div class="bm-grid">
           <div>
             <div class="bm-col-head" style="color: var(--color-graphite);">Revenue · Three Tiers</div>
             <div class="revenue-stack">
-              <div class="revenue-block b1"><strong>Free.</strong> Researchers, students. Discovery channel.</div>
-              <div class="revenue-block b2"><strong>Metered API / MCP.</strong> AI companies and R&amp;D teams.</div>
-              <div class="revenue-block b3"><strong>Enterprise.</strong> Custom ontology. Pharma · biotech · defense.</div>
+              <div class="revenue-block b1"><strong>Free.</strong> Occasional research support.</div>
+              <div class="revenue-block b2"><strong>Metered API / MCP.</strong> Model training &amp; apps.</div>
+              <div class="revenue-block b3"><strong>Enterprise.</strong> Faster R&amp;D. High-stakes decision support.</div>
             </div>
           </div>
           <div class="bm-divider"></div>
@@ -1784,12 +2552,12 @@ em { font-style: italic; font-weight: inherit; }
             <div class="moat-stack">
               <div class="moat-layer l3"><strong>Ontologies.</strong> Switching cost &middot; data-network effect.</div>
               <div class="moat-layer l2"><strong>Data quality.</strong> Miners and validators compete continuously.</div>
-              <div class="moat-layer l1"><strong>Uncertainty as signal.</strong> Diverse extractors + gold-data.</div>
+              <div class="moat-layer l1"><strong>Uncertainty as signal.</strong> Unique data. Find opportunities.</div>
             </div>
           </div>
         </div>
       </div>
-      <div class="takeaway" style="bottom: 220px;">
+      <div class="takeaway" style="bottom: 220px; font-size: 34px;">
         Layers 1 and 2 compound automatically. Layer 3 is built one enterprise at a time.
       </div>
       <div class="footer-tab t-meta"></div>
@@ -1798,9 +2566,9 @@ em { font-style: italic; font-weight: inherit; }
     </section>
 
     <!-- ================================================================
-         SLIDE 14 — ROADMAP
+         SLIDE 17 — ROADMAP (appendix · A.05)
          ================================================================ -->
-    <section class="slide" data-section="11 · Roadmap" data-page="14">
+    <section class="slide" data-section="Appendix · Roadmap" data-page="A.04">
       <h2 class="slide-title t-title">Roadmap.</h2>
       <div class="content" style="position: relative;">
         <div class="roadmap-wrap">
@@ -1848,26 +2616,16 @@ em { font-style: italic; font-weight: inherit; }
     </section>
 
     <!-- ================================================================
-         SLIDE 15 — CLOSING
+         SLIDE 18 — REWARD FUNCTION MATH IMAGE (appendix · A.06)
+         Full-bleed display of the user's hand-drawn reward function notes.
+         No title, no footer chrome — deliberately formatted differently
+         from the rest of the deck to signal "deep technical reference",
+         pulled in only if the audience drills into the math during Q&A.
+         Image source: Logos and pictures/rfm.png.
          ================================================================ -->
-    <section class="slide closing" data-section="—">
-      <div class="hero-art"></div>
-      <div class="overlay"></div>
-      <div class="closing-quote">
-        <div class="quote-display">
-          <div class="qmark">&ldquo;</div>
-          <div class="qbody">
-            Frankly, we&rsquo;re skeptical that 42 is the answer.<br>
-            Claims will know.
-          </div>
-        </div>
-      </div>
-      <div class="closing-text">
-        <div class="closing-name">Prof. Dr. Philipp Koellinger</div>
-        <div class="closing-email">philipp@desci.com</div>
-      </div>
+    <section class="slide fullbleed-img" data-section="Appendix · Reward Function Math">
+      <img src="Logos and pictures/rfm.png" alt="Reward function math — full formal expressions for miner and validator rewards, channel score examples, design rationale, and failure-mode coverage">
     </section>
-
   </div>
 </div>
 
@@ -1894,31 +2652,55 @@ em { font-style: italic; font-weight: inherit; }
 
   const pad2 = n => n.toString().padStart(2, '0');
 
+  // Split slides into main deck vs. appendix for grouped numbering.
+  // Main deck slides count up to mainTotal (e.g. "07 / 11").
+  // Appendix slides start a fresh count with an "A." prefix (e.g. "A.02 / A.05").
+  const isAppx     = s => (s.dataset.section || '').startsWith('Appendix');
+  const mainSlides = slides.filter(s => !isAppx(s));
+  const appxSlides = slides.filter(s =>  isAppx(s));
+  const mainTotal  = mainSlides.length;
+  const appxTotal  = appxSlides.length;
+
+  // Return the per-slide counter label for a given slide.
+  const labelFor = s => {
+    if (isAppx(s)) {
+      const i = appxSlides.indexOf(s) + 1;
+      return 'A.' + pad2(i) + ' / A.' + pad2(appxTotal);
+    }
+    const i = mainSlides.indexOf(s) + 1;
+    return pad2(i) + ' / ' + pad2(mainTotal);
+  };
+
   // Populate per-slide footer (section tab + page numeral) from data-attrs
-  slides.forEach((s, i) => {
+  slides.forEach(s => {
     const tab  = s.querySelector('.footer-tab');
     const page = s.querySelector('.footer-page');
     if (tab && s.dataset.section && s.dataset.section !== '—') {
       tab.textContent = s.dataset.section.toUpperCase();
     }
     if (page) {
-      page.textContent = pad2(i + 1) + ' / ' + pad2(total);
+      page.textContent = labelFor(s);
     }
   });
 
   function show(n) {
     idx = (n + total) % total;
     slides.forEach((s, i) => s.classList.toggle('active', i === idx));
-    counter.textContent = pad2(idx + 1) + ' / ' + pad2(total);
+    counter.textContent = labelFor(slides[idx]);
     history.replaceState(null, '', '#' + (idx + 1));
   }
 
   function fit() {
     const wrap = stage.parentElement;
-    // Scale the stage to fit the wrap. On portrait phones the wrap itself is
-    // rotated 90° via the @media query in CSS, so wrap.clientWidth/Height are
-    // already swapped (clientWidth = vh, clientHeight = vw), and this plain
-    // min(sx, sy) calculation yields the correct fit-to-rotated-viewport scale.
+    // Contain-fit: preserve the slide's 16:9 aspect ratio at all times.
+    // Letterboxes the dimension that doesn't match (just like a PDF viewer
+    // does when displaying a 16:9 page in a non-16:9 viewport). For maximum
+    // slide size on a laptop browser, press F (or use the ⛶ button) to enter
+    // fullscreen mode — that reclaims the ~110px of vertical space that
+    // browser chrome (tabs + URL + bookmarks) eats out of the viewport.
+    // On portrait phones the wrap itself is rotated 90° via the @media query
+    // in CSS, so wrap.clientWidth/Height are already swapped and this same
+    // calculation yields the correct fit-to-rotated-viewport scale.
     const sx = wrap.clientWidth  / 1920;
     const sy = wrap.clientHeight / 1080;
     const scale = Math.min(sx, sy);
